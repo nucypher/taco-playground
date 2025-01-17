@@ -5,6 +5,7 @@ interface JsonCondition {
   operator?: string;
   value?: any;
   returnValueTest?: any;
+  chain?: number;
   left?: JsonCondition;
   right?: JsonCondition;
   condition?: JsonCondition;
@@ -21,7 +22,7 @@ export const blocksToJson = (blocks: Block[]): any => {
           const timestampInput = block.inputs?.find(i => i.id === 'returnValueTest');
           if (timestampInput?.connected) {
             const condition = {
-              chain: block.properties?.chain || 1,
+              chain: block.properties?.chain || 5001,
               returnValueTest: {
                 comparator: block.properties?.comparator || '>=',
                 value: parseInt(timestampInput.connected.value || '0')

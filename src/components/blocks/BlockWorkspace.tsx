@@ -221,6 +221,24 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
     setError('');
   }, []);
 
+  const handlePropertyChange = useCallback((blockId: string, property: string, value: any) => {
+    setBlocks(prev => {
+      const updatedBlocks = prev.map(block => {
+        if (block.id === blockId) {
+          return {
+            ...block,
+            properties: {
+              ...block.properties,
+              [property]: value
+            }
+          };
+        }
+        return block;
+      });
+      return updatedBlocks;
+    });
+  }, []);
+
   return (
     <div className="h-full flex flex-col">
       <PresetButtons 
@@ -251,6 +269,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
               onConnect={connectBlocks}
               onRemove={removeBlock}
               onValueChange={handleValueChange}
+              onPropertyChange={handlePropertyChange}
             />
           ))}
           {blocks.length === 0 && (

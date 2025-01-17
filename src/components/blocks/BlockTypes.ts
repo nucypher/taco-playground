@@ -11,18 +11,22 @@ export type ConditionType =
 
 export interface Block {
   id: string;
-  type: BlockType;
-  category: string;
+  type: 'condition' | 'operator' | 'value';
+  category: 'conditions' | 'operators' | 'values';
   label: string;
-  value?: any;
-  inputType?: 'text' | 'number' | 'datetime';
-  placeholder?: string;
+  inputType?: string;
+  value?: string;
   inputs?: BlockInput[];
+  properties?: {
+    chain?: number;
+    comparator?: string;
+    [key: string]: any;
+  };
 }
 
 export interface BlockInput {
   id: string;
-  type: BlockType[];
+  type: string[];
   label: string;
   connected?: Block;
 }

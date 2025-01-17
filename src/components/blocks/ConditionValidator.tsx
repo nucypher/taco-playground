@@ -3,6 +3,14 @@
 import React from 'react';
 import { conditions } from '@nucypher/taco';
 
+// Define supported chains (can be moved to a shared constants file)
+const SUPPORTED_CHAINS = [
+  { id: 137, name: 'Polygon Mainnet' },
+  { id: 80002, name: 'Polygon Amoy' },
+  { id: 11155111, name: 'Sepolia' },
+  { id: 1, name: 'Ethereum Mainnet' }
+] as const;
+
 interface ConditionValidatorProps {
   condition: any;
 }
@@ -15,6 +23,11 @@ const ConditionValidator: React.FC<ConditionValidatorProps> = ({ condition }) =>
       console.log('Validating condition:', condition);
       // Validate based on condition type
       if (condition.chain !== undefined) { // TimeCondition
+        // Verify chain ID is supported
+        if (!SUPPORTED_CHAINS.some(chain => chain.id === condition.chain)) {
+          throw new Error(`Unsupported chain ID: ${condition.chain}`);
+        }
+
         new conditions.base.time.TimeCondition({
           chain: condition.chain,
           returnValueTest: condition.returnValueTest

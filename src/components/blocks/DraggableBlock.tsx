@@ -13,6 +13,7 @@ interface DraggableBlockProps {
   onConnect?: (sourceBlock: Block, targetBlock: Block, inputId: string) => void;
   onRemove?: (blockId: string) => void;
   onValueChange?: (blockId: string, value: string) => void;
+  onPropertyChange?: (blockId: string, property: string, value: any) => void;
 }
 
 const BLOCK_COLORS = {
@@ -85,6 +86,14 @@ const InputSlot: React.FC<{
   );
 };
 
+// Define supported chains
+const SUPPORTED_CHAINS = [
+  { id: 137, name: 'Polygon Mainnet' },
+  { id: 80002, name: 'Polygon Amoy' },
+  { id: 11155111, name: 'Sepolia' },
+  { id: 1, name: 'Ethereum Mainnet' }
+] as const;
+
 const DraggableBlock: React.FC<DraggableBlockProps> = ({ 
   block, 
   index,
@@ -93,6 +102,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
   onConnect,
   onRemove,
   onValueChange,
+  onPropertyChange
 }) => {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -201,6 +211,23 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
           />
         ))}
       </div>
+
+      {block.type === 'condition' && block.id.startsWith('timelock') && (
+        <div className="flex items-center gap-2 mt-2 p-2 bg-gray-800/50 rounded">
+          <label className="text-sm text-gray-400">Chain:</label>
+          <select
+            value={block.properties?.chain || 80002}
+            onChange={(e) => onPropertyChange?.(block.id, 'chain', parseInt(e.target.value))}
+            className="flex-1 px-2 py-1 text-sm bg-gray-800 border border-gray-700 rounded"
+          >
+            {SUPPORTED_CHAINS.map(chain => (
+              <option key={chain.id} value={chain.id}>
+                {chain.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 };

@@ -26,7 +26,7 @@ const PresetButtons: React.FC<PresetButtonsProps> = ({ onAddBlocks, onClearWorks
       category: 'conditions',
       label: 'Time Lock',
       // This will generate a condition like:
-      // { chain: 1, returnValueTest: { comparator: '>=', value: timestamp } }
+      // { chain: 80002, returnValueTest: { comparator: '>=', value: timestamp } }
       inputs: [
         {
           id: 'returnValueTest',
@@ -36,7 +36,7 @@ const PresetButtons: React.FC<PresetButtonsProps> = ({ onAddBlocks, onClearWorks
         }
       ],
       properties: {
-        chain: 1,
+        chain: 80002, // Polygon Amoy
         comparator: '>='
       }
     };

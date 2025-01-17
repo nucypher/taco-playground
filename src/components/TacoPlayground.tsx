@@ -10,6 +10,7 @@ import JsonPreview from './blocks/JsonPreview';
 import EncryptionPanel from './EncryptionPanel';
 import DecryptionPanel from './DecryptionPanel';
 import TacoProvider from './TacoProvider';
+import NetworkCheck from './NetworkCheck';
 
 const TacoPlayground: React.FC = () => {
   const [currentCondition, setCurrentCondition] = useState<any>(null);
@@ -19,15 +20,11 @@ const TacoPlayground: React.FC = () => {
     <TacoProvider>
       <DndProvider backend={HTML5Backend}>
         <MainLayout>
+          <NetworkCheck />
           <div className="flex flex-col gap-3 max-w-[1600px] mx-auto">
             <WorkspaceLayout
               workspace={<BlockWorkspace onConditionChange={setCurrentCondition} />}
-              preview={
-                <JsonPreview 
-                  condition={currentCondition} 
-                  onConditionChange={setCurrentCondition}
-                />
-              }
+              preview={<JsonPreview condition={currentCondition} />}
             />
             
             <div className="grid grid-cols-2 gap-3">

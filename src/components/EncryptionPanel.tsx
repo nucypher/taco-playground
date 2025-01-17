@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { encrypt, domains } from '@nucypher/taco';
+import { encrypt, domains, conditions } from '@nucypher/taco';
 import { ethers } from 'ethers';
 
 interface EncryptionPanelProps {
@@ -24,25 +24,27 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
     try {
       setIsEncrypting(true);
       
-      // Check if MetaMask is installed
       if (!window.ethereum) {
         throw new Error('MetaMask is not installed');
       }
 
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       
-      // Request account access
       const accounts = await provider.send("eth_requestAccounts", []);
       if (!accounts || accounts.length === 0) {
         throw new Error('No accounts found');
       }
 
       const signer = provider.getSigner();
+
+      // Create a TACo condition using ConditionExpression
+      const tacoCondition = new conditions.ConditionExpression(condition);
+
       const messageKit = await encrypt(
         provider,
         domains.TESTNET,
         message,
-        condition,
+        tacoCondition,
         "6", // Ritual ID #6
         signer
       );

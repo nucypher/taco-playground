@@ -1,9 +1,10 @@
 import { Block } from './BlockTypes';
 
 interface JsonCondition {
-  type: string;
+  type?: string;
   operator?: string;
   value?: any;
+  returnValueTest?: any;
   left?: JsonCondition;
   right?: JsonCondition;
   condition?: JsonCondition;
@@ -16,22 +17,23 @@ export const blocksToJson = (blocks: Block[]): any => {
 
     switch (block.type) {
       case 'condition': {
-        const condition: JsonCondition = {
-          type: block.id.split('-')[0], // Get base type without timestamp
-        };
-
-        // Process inputs
-        block.inputs?.forEach(input => {
-          if (input.connected) {
-            if (input.connected.type === 'value') {
-              condition[input.id] = input.connected.value;
-            } else {
-              condition[input.id] = processBlock(input.connected);
-            }
+        if (block.id.startsWith('timelock')) {
+          const timestampInput = block.inputs?.find(i => i.id === 'returnValueTest');
+          if (timestampInput?.connected) {
+            const condition = {
+              chain: block.properties?.chain || 1,
+              returnValueTest: {
+                comparator: block.properties?.comparator || '>=',
+                value: parseInt(timestampInput.connected.value || '0')
+              }
+            };
+            console.log('Generated timelock condition:', condition);
+            return condition;
           }
-        });
+        }
 
-        return condition;
+        // ... handle other condition types ...
+        return null;
       }
 
       case 'operator': {
@@ -76,7 +78,7 @@ export const blocksToJson = (blocks: Block[]): any => {
     }
   };
 
-  // Process only top-level blocks (not connected to other blocks)
+  // Process only top-level blocks
   const topLevelBlocks = blocks.filter(block => {
     const isConnected = blocks.some(b => 
       b.inputs?.some(input => input.connected?.id === block.id)
@@ -89,7 +91,6 @@ export const blocksToJson = (blocks: Block[]): any => {
 
   // If multiple top-level blocks, combine them with AND
   return {
-    type: 'operator',
     operator: 'and',
     left: processBlock(topLevelBlocks[0]),
     right: topLevelBlocks.length === 2 

@@ -13,8 +13,15 @@ const ConditionValidator: React.FC<ConditionValidatorProps> = ({ condition }) =>
     
     try {
       console.log('Validating condition:', condition);
-      const conditionExpr = new conditions.ConditionExpression(condition);
-      return true;
+      // Validate based on condition type
+      if (condition.chain !== undefined) { // TimeCondition
+        new conditions.base.time.TimeCondition({
+          chain: condition.chain,
+          returnValueTest: condition.returnValueTest
+        });
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error('Validation error:', error);
       return false;

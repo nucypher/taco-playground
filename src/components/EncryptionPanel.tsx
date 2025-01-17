@@ -37,8 +37,16 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
 
       const signer = provider.getSigner();
 
-      // Create a TACo condition using ConditionExpression
-      const tacoCondition = new conditions.ConditionExpression(condition);
+      // Create a TACo condition based on the condition type
+      let tacoCondition;
+      if (condition.chain !== undefined) { // TimeCondition
+        tacoCondition = new conditions.base.time.TimeCondition({
+          chain: condition.chain,
+          returnValueTest: condition.returnValueTest
+        });
+      } else {
+        throw new Error('Unsupported condition type');
+      }
 
       const messageKit = await encrypt(
         provider,

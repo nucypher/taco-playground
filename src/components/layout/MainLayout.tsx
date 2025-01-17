@@ -11,7 +11,6 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const handleConnect = (provider: ethers.providers.Web3Provider) => {
-    // You can store the provider in a global state management solution if needed
     console.log('Connected to wallet', provider);
   };
 

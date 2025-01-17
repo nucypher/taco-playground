@@ -9,10 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@nucypher/taco": "latest",
-    "@nucypher/taco-auth": "latest",
+    "@nucypher/taco": "^0.5.0",
+    "@nucypher/taco-auth": "^0.2.0",
     "@walletconnect/ethereum-provider": "^2.11.2",
-    "ethers": "^6.11.1",
+    "ethers": "^5.7.2",
     "next": "15.1.4",
     "react": "^19.0.0",
     "react-dnd": "^16.0.1",

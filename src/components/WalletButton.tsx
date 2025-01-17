@@ -1,118 +1,36 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { BrowserProvider } from 'ethers';
-import { EthereumProvider } from '@walletconnect/ethereum-provider';
+import React, { useState } from 'react';
+import { ethers } from 'ethers';
 
 interface WalletButtonProps {
-  onConnect: (provider: BrowserProvider) => void;
+  onConnect: (provider: ethers.providers.Web3Provider) => void;
 }
 
 const WalletButton: React.FC<WalletButtonProps> = ({ onConnect }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const [wcProvider, setWcProvider] = useState<EthereumProvider | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
-
-  useEffect(() => {
-    const initProvider = async () => {
-      const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
-      
-      if (!projectId) {
-        setError('WalletConnect Project ID not configured');
-        setIsInitializing(false);
-        return;
-      }
-
-      try {
-        const provider = await EthereumProvider.init({
-          projectId,
-          chains: [1, 5], // Mainnet and Goerli
-          showQrModal: true,
-          methods: [
-            'eth_sendTransaction',
-            'eth_signTransaction',
-            'eth_sign',
-            'personal_sign',
-            'eth_signTypedData',
-          ],
-          events: ['chainChanged', 'accountsChanged'],
-          metadata: {
-            name: 'TACo Playground',
-            description: 'TACo Playground Application',
-            url: window.location.origin,
-            icons: ['https://walletconnect.com/walletconnect-logo.png']
-          },
-        });
-
-        setWcProvider(provider);
-        setError('');
-
-        provider.on('connect', async (e: any) => {
-          console.log('Connected:', e);
-          await handleConnection(provider);
-        });
-
-        provider.on('disconnect', () => {
-          console.log('Disconnected');
-          setIsConnected(false);
-          setAddress('');
-        });
-
-        // Check if already connected
-        if (provider.session) {
-          await handleConnection(provider);
-        }
-
-      } catch (err: any) {
-        console.error('Failed to initialize provider:', err);
-        setError(err.message || 'Failed to initialize wallet connection');
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-
-    initProvider();
-
-    return () => {
-      if (wcProvider) {
-        wcProvider.removeListener('connect', () => {});
-        wcProvider.removeListener('disconnect', () => {});
-      }
-    };
-  }, []);
-
-  const handleConnection = async (provider: EthereumProvider) => {
-    try {
-      const ethersProvider = new BrowserProvider(provider as any);
-      const accounts = await provider.enable();
-      
-      if (accounts && accounts.length > 0) {
-        setIsConnected(true);
-        setAddress(accounts[0]);
-        onConnect(ethersProvider);
-        setError('');
-      }
-    } catch (err: any) {
-      console.error('Connection error:', err);
-      setError(err.message || 'Failed to connect wallet');
-    }
-  };
 
   const handleConnect = async () => {
     setError('');
     
     try {
-      if (!wcProvider) {
-        throw new Error('Wallet connection not initialized');
+      if (!window.ethereum) {
+        throw new Error('MetaMask is not installed');
       }
 
-      if (!wcProvider.session) {
-        await wcProvider.connect();
-      } else {
-        await handleConnection(wcProvider);
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      
+      // Request account access
+      const accounts = await provider.send("eth_requestAccounts", []);
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found');
       }
+
+      setIsConnected(true);
+      setAddress(accounts[0]);
+      onConnect(provider);
 
     } catch (err: any) {
       console.error('Connection error:', err);
@@ -120,26 +38,10 @@ const WalletButton: React.FC<WalletButtonProps> = ({ onConnect }) => {
     }
   };
 
-  const handleDisconnect = async () => {
-    try {
-      if (wcProvider && wcProvider.session) {
-        await wcProvider.disconnect();
-      }
-      setIsConnected(false);
-      setAddress('');
-    } catch (err: any) {
-      console.error('Disconnect error:', err);
-      setError(err.message || 'Failed to disconnect wallet');
-    }
+  const handleDisconnect = () => {
+    setIsConnected(false);
+    setAddress('');
   };
-
-  if (isInitializing) {
-    return (
-      <div className="flex items-center justify-center">
-        <span className="text-sm text-gray-400">Initializing wallet connection...</span>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col items-end gap-2">
@@ -147,8 +49,7 @@ const WalletButton: React.FC<WalletButtonProps> = ({ onConnect }) => {
         {!isConnected ? (
           <button
             onClick={handleConnect}
-            disabled={!wcProvider}
-            className="px-4 py-2 rounded-md font-medium transition-colors bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-md font-medium transition-colors bg-blue-600 hover:bg-blue-700 text-white"
           >
             Connect Wallet
           </button>

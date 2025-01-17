@@ -12,22 +12,34 @@ interface DecryptionPanelProps {
 const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit }) => {
   const [decryptedMessage, setDecryptedMessage] = useState('');
   const [isDecrypting, setIsDecrypting] = useState(false);
-  const [walletAddress, setWalletAddress] = useState('');
   const [error, setError] = useState('');
 
   const handleDecrypt = async () => {
     if (!messageKit) return;
+    setError('');
 
     try {
       setIsDecrypting(true);
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
 
+      // Check if MetaMask is installed
+      if (!window.ethereum) {
+        throw new Error('MetaMask is not installed');
+      }
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      
+      // Request account access
+      const accounts = await provider.send("eth_requestAccounts", []);
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found');
+      }
+
+      const signer = provider.getSigner();
       const conditionContext = conditions.context.ConditionContext.fromMessageKit(messageKit);
       
       const authProvider = new EIP4361AuthProvider(
         provider,
-        provider.getSigner(),
+        signer
       );
       conditionContext.addAuthProvider(USER_ADDRESS_PARAM_DEFAULT, authProvider);
 
@@ -39,9 +51,9 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit }) => {
       );
 
       setDecryptedMessage(new TextDecoder().decode(decrypted));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Decryption error:', error);
-      setError('An error occurred while decrypting the message.');
+      setError(error.message || 'Failed to decrypt message');
     } finally {
       setIsDecrypting(false);
     }
@@ -54,28 +66,14 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit }) => {
       </div>
 
       <div className="space-y-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
-            Wallet Address
-          </label>
-          <input
-            type="text"
-            value={walletAddress}
-            onChange={(e) => setWalletAddress(e.target.value)}
-            placeholder="0x..."
-            className="w-full px-3 py-2 bg-gray-800 text-gray-100 border border-gray-700 rounded-md 
-              placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
         <button
           onClick={handleDecrypt}
-          disabled={!messageKit || !walletAddress}
+          disabled={!messageKit}
           className="w-full px-4 py-2 bg-blue-600 text-white rounded-md font-medium
             hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
             disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          Decrypt Message
+          {isDecrypting ? 'Decrypting...' : 'Decrypt Message'}
         </button>
       </div>
 

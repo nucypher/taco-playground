@@ -15,30 +15,42 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
 }) => {
   const [message, setMessage] = useState('');
   const [isEncrypting, setIsEncrypting] = useState(false);
-  const [recipientAddress, setRecipientAddress] = useState('');
   const [error, setError] = useState('');
 
   const handleEncrypt = async () => {
     if (!condition || !message) return;
+    setError('');
 
     try {
       setIsEncrypting(true);
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
+      
+      // Check if MetaMask is installed
+      if (!window.ethereum) {
+        throw new Error('MetaMask is not installed');
+      }
 
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      
+      // Request account access
+      const accounts = await provider.send("eth_requestAccounts", []);
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found');
+      }
+
+      const signer = provider.getSigner();
       const messageKit = await encrypt(
         provider,
         domains.TESTNET,
         message,
         condition,
-        'your-ritual-id',
-        provider.getSigner()
+        "6", // Ritual ID #6
+        signer
       );
 
       onMessageKitGenerated(messageKit);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Encryption error:', error);
-      setError('Encryption error');
+      setError(error.message || 'Failed to encrypt message');
     } finally {
       setIsEncrypting(false);
     }
@@ -64,28 +76,14 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
-            Recipient Address
-          </label>
-          <input
-            type="text"
-            value={recipientAddress}
-            onChange={(e) => setRecipientAddress(e.target.value)}
-            placeholder="0x..."
-            className="w-full px-3 py-2 bg-gray-800 text-gray-100 border border-gray-700 rounded-md 
-              placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
         <button
           onClick={handleEncrypt}
-          disabled={!message || !recipientAddress || !condition}
+          disabled={!message || !condition}
           className="w-full px-4 py-2 bg-blue-600 text-white rounded-md font-medium
             hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
             disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          Encrypt Message
+          {isEncrypting ? 'Encrypting...' : 'Encrypt Message'}
         </button>
       </div>
 

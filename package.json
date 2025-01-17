@@ -11,7 +11,8 @@
   "dependencies": {
     "@nucypher/taco": "latest",
     "@nucypher/taco-auth": "latest",
-    "ethers": "^5.7.2",
+    "@walletconnect/ethereum-provider": "^2.11.2",
+    "ethers": "^6.11.1",
     "next": "15.1.4",
     "react": "^19.0.0",
     "react-dnd": "^16.0.1",

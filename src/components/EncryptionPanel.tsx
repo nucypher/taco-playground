@@ -15,6 +15,8 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
 }) => {
   const [message, setMessage] = useState('');
   const [isEncrypting, setIsEncrypting] = useState(false);
+  const [recipientAddress, setRecipientAddress] = useState('');
+  const [error, setError] = useState('');
 
   const handleEncrypt = async () => {
     if (!condition || !message) return;
@@ -36,35 +38,62 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
       onMessageKitGenerated(messageKit);
     } catch (error) {
       console.error('Encryption error:', error);
+      setError('Encryption error');
     } finally {
       setIsEncrypting(false);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Encrypt Message</h2>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-sm font-medium text-gray-100">Encrypt Message</h3>
+      </div>
       
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div>
-          <label className="block text-sm font-medium mb-1">Message</label>
+          <label className="block text-sm font-medium text-gray-300 mb-1">
+            Message
+          </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="w-full p-2 border rounded"
-            rows={4}
-            placeholder="Enter your secret message..."
+            placeholder="Enter message to encrypt..."
+            className="w-full h-24 px-3 py-2 bg-gray-800 text-gray-100 border border-gray-700 rounded-md 
+              placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-1">
+            Recipient Address
+          </label>
+          <input
+            type="text"
+            value={recipientAddress}
+            onChange={(e) => setRecipientAddress(e.target.value)}
+            placeholder="0x..."
+            className="w-full px-3 py-2 bg-gray-800 text-gray-100 border border-gray-700 rounded-md 
+              placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
         <button
           onClick={handleEncrypt}
-          disabled={!condition || !message || isEncrypting}
-          className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 disabled:bg-gray-300"
+          disabled={!message || !recipientAddress || !condition}
+          className="w-full px-4 py-2 bg-blue-600 text-white rounded-md font-medium
+            hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+            disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {isEncrypting ? 'Encrypting...' : 'Encrypt Message'}
+          Encrypt Message
         </button>
       </div>
+
+      {error && (
+        <div className="p-3 bg-red-900/50 border border-red-700 rounded-md">
+          <p className="text-sm text-red-200">{error}</p>
+        </div>
+      )}
     </div>
   );
 };

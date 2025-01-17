@@ -21,14 +21,14 @@ const CategorySection: React.FC<CategorySectionProps> = ({
   const getTemplateBlock = useCallback((block: Block) => ({
     ...block,
     id: `${block.id}-template`,
-    isTemplate: true // Add a flag to identify template blocks
+    isTemplate: true
   }), []);
 
   return (
-    <div className="border-b border-gray-200 last:border-b-0">
+    <div className="border-b border-gray-700 last:border-b-0">
       <button
         onClick={onToggle}
-        className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
+        className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-100 hover:bg-gray-800"
       >
         <span>{title}</span>
         <span className="transform transition-transform duration-200">
@@ -70,10 +70,10 @@ const BlockSidebar: React.FC = () => {
   }));
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="border-b border-gray-200 px-3 py-3 bg-gray-50">
-        <h3 className="text-sm font-semibold text-gray-900">Blocks</h3>
-        <p className="text-xs text-gray-500 mt-1">Drag blocks to build conditions</p>
+    <div className="h-full flex flex-col bg-gray-900">
+      <div className="border-b border-gray-700 px-3 py-3 bg-gray-800">
+        <h3 className="text-sm font-semibold text-gray-100">Blocks</h3>
+        <p className="text-xs text-gray-400 mt-1">Drag blocks to build conditions</p>
       </div>
       <div className="flex-1 overflow-y-auto">
         {categorizedBlocks.map(({ category, blocks }) => (

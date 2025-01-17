@@ -42,13 +42,13 @@ const TacoPlayground: React.FC = () => {
           />
           
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-lg shadow-sm p-3">
+            <div className="bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-3">
               <EncryptionPanel
                 condition={currentCondition}
                 onMessageKitGenerated={setMessageKit}
               />
             </div>
-            <div className="bg-white rounded-lg shadow-sm p-3">
+            <div className="bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-3">
               <DecryptionPanel messageKit={messageKit} />
             </div>
           </div>

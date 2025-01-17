@@ -31,12 +31,12 @@ const ValueBlock: React.FC<ValueBlockProps> = ({
   return (
     <div className={`
       group relative flex items-center gap-2 p-2 rounded-lg
-      ${isPreview ? 'bg-green-100' : 'bg-green-500 shadow-md hover:shadow-lg transform hover:-translate-y-1'}
+      ${isPreview ? 'bg-green-800' : 'bg-green-700 shadow-md hover:shadow-lg transform hover:-translate-y-1'}
       transition-all duration-200
     `}>
       <label className={`
         text-sm font-medium whitespace-nowrap
-        ${isPreview ? 'text-green-800' : 'text-white'}
+        ${isPreview ? 'text-gray-200' : 'text-gray-100'}
       `}>
         {block.label}:
       </label>
@@ -46,11 +46,11 @@ const ValueBlock: React.FC<ValueBlockProps> = ({
         onChange={handleChange}
         placeholder={block.placeholder || `Enter ${block.label.toLowerCase()}`}
         className={`
-          bg-white/90 rounded px-2 py-1 text-sm w-full
+          bg-gray-800/90 rounded px-2 py-1 text-sm w-full text-gray-100
           border border-transparent
-          focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent
-          placeholder-gray-400 text-gray-900
-          ${isPreview ? 'bg-white' : 'bg-white/90'}
+          focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent
+          placeholder-gray-500
+          ${isPreview ? 'bg-gray-800' : 'bg-gray-800/90'}
         `}
       />
     </div>

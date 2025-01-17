@@ -16,10 +16,10 @@ interface DraggableBlockProps {
 }
 
 const BLOCK_COLORS = {
-  condition: 'bg-purple-500',
-  operator: 'bg-blue-500',
-  value: 'bg-green-500',
-  property: 'bg-orange-500',
+  condition: 'bg-purple-700',
+  operator: 'bg-blue-700',
+  value: 'bg-green-700',
+  property: 'bg-orange-700',
 };
 
 const RemoveButton: React.FC<{ onRemove: () => void }> = ({ onRemove }) => (
@@ -28,9 +28,9 @@ const RemoveButton: React.FC<{ onRemove: () => void }> = ({ onRemove }) => (
       e.stopPropagation();
       onRemove();
     }}
-    className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full 
+    className="absolute -top-2 -right-2 bg-red-600 text-gray-100 w-5 h-5 rounded-full 
       flex items-center justify-center opacity-0 group-hover:opacity-100 
-      transition-opacity hover:bg-red-600 z-10"
+      transition-opacity hover:bg-red-700 z-10"
     aria-label="Remove block"
   >
     ×
@@ -65,9 +65,9 @@ const InputSlot: React.FC<{
     <div
       ref={drop}
       className={`
-        bg-white/20 px-2 py-1 rounded min-w-[60px] min-h-[30px]
-        ${!input.connected ? 'border-2 border-dashed border-white/30' : ''}
-        ${isOver && canDrop ? 'ring-2 ring-white' : ''}
+        bg-gray-800/40 px-2 py-1 rounded min-w-[60px] min-h-[30px]
+        ${!input.connected ? 'border-2 border-dashed border-gray-600' : ''}
+        ${isOver && canDrop ? 'ring-2 ring-gray-300' : ''}
       `}
     >
       {input.connected ? (
@@ -79,7 +79,7 @@ const InputSlot: React.FC<{
           onValueChange={onValueChange}
         />
       ) : (
-        <span className="text-white/60">{input.label}</span>
+        <span className="text-gray-400">{input.label}</span>
       )}
     </div>
   );

@@ -184,7 +184,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
       ref={drop}
       className={`
         h-full overflow-y-auto p-4
-        ${isOver ? 'bg-blue-50' : 'bg-white'}
+        ${isOver ? 'bg-gray-800' : 'bg-gray-900'}
         transition-colors duration-200
       `}
     >
@@ -202,7 +202,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
           />
         ))}
         {blocks.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-[500px] text-gray-400">
+          <div className="flex flex-col items-center justify-center h-[500px] text-gray-500">
             <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>

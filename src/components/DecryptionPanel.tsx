@@ -12,6 +12,8 @@ interface DecryptionPanelProps {
 const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit }) => {
   const [decryptedMessage, setDecryptedMessage] = useState('');
   const [isDecrypting, setIsDecrypting] = useState(false);
+  const [walletAddress, setWalletAddress] = useState('');
+  const [error, setError] = useState('');
 
   const handleDecrypt = async () => {
     if (!messageKit) return;
@@ -39,35 +41,58 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit }) => {
       setDecryptedMessage(new TextDecoder().decode(decrypted));
     } catch (error) {
       console.error('Decryption error:', error);
+      setError('An error occurred while decrypting the message.');
     } finally {
       setIsDecrypting(false);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Decrypt Message</h2>
-      
-      <div className="space-y-4">
-        {messageKit && (
-          <button
-            onClick={handleDecrypt}
-            disabled={isDecrypting}
-            className="w-full bg-purple-500 text-white p-2 rounded hover:bg-purple-600 disabled:bg-gray-300"
-          >
-            {isDecrypting ? 'Decrypting...' : 'Attempt Decryption'}
-          </button>
-        )}
-
-        {decryptedMessage && (
-          <div>
-            <h3 className="font-medium mb-2">Decrypted Message:</h3>
-            <div className="p-3 bg-gray-100 rounded">
-              {decryptedMessage}
-            </div>
-          </div>
-        )}
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-sm font-medium text-gray-100">Decrypt Message</h3>
       </div>
+
+      <div className="space-y-3">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-1">
+            Wallet Address
+          </label>
+          <input
+            type="text"
+            value={walletAddress}
+            onChange={(e) => setWalletAddress(e.target.value)}
+            placeholder="0x..."
+            className="w-full px-3 py-2 bg-gray-800 text-gray-100 border border-gray-700 rounded-md 
+              placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <button
+          onClick={handleDecrypt}
+          disabled={!messageKit || !walletAddress}
+          className="w-full px-4 py-2 bg-blue-600 text-white rounded-md font-medium
+            hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+            disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Decrypt Message
+        </button>
+      </div>
+
+      {decryptedMessage && (
+        <div className="p-3 bg-gray-800 border border-gray-700 rounded-md">
+          <label className="block text-sm font-medium text-gray-300 mb-1">
+            Decrypted Message
+          </label>
+          <p className="text-gray-100">{decryptedMessage}</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="p-3 bg-red-900/50 border border-red-700 rounded-md">
+          <p className="text-sm text-red-200">{error}</p>
+        </div>
+      )}
     </div>
   );
 };

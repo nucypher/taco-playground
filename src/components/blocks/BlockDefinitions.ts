@@ -60,6 +60,10 @@ export const AVAILABLE_BLOCKS: Block[] = [
       standardContractType: 'ERC20',
       method: 'balanceOf',
       parameters: [':userAddress'],
+      returnValueTest: {
+        comparator: '>',
+        value: 0
+      }
     }
   },
   {

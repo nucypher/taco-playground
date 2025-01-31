@@ -45,24 +45,30 @@ export const blocksToJson = (blocks: Block[]): any => {
 
       switch (input.id) {
         case 'contractAddress':
-          condition.contractAddress = connectedValue;
+          condition.contractAddress = connectedValue.trim();
           break;
         case 'chain':
-          condition.chain = parseInt(connectedValue);
+          const chainId = parseInt(connectedValue);
+          if (!isNaN(chainId)) {
+            condition.chain = chainId;
+          }
           break;
         case 'minBalance':
-          condition.returnValueTest = {
-            comparator: '>',
-            value: connectedValue
-          };
+          const balance = parseFloat(connectedValue);
+          if (!isNaN(balance)) {
+            condition.returnValueTest = {
+              comparator: '>',
+              value: balance
+            };
+          }
           break;
         case 'timestamp':
-          if (condition.returnValueTest) {
-            condition.returnValueTest.value = parseInt(connectedValue);
-          } else {
+        case 'minTimestamp':
+          const timestamp = parseInt(connectedValue);
+          if (!isNaN(timestamp)) {
             condition.returnValueTest = {
               comparator: '>=',
-              value: parseInt(connectedValue)
+              value: timestamp
             };
           }
           break;
@@ -95,9 +101,12 @@ export const blocksToJson = (blocks: Block[]): any => {
       }
     });
 
-    // Ensure chain is set to 1 if not specified for timestamp blocks
-    if (condition.standardContractType === 'timestamp' && !condition.chain) {
-      condition.chain = 1;
+    // For timestamp blocks, ensure chain is set to 1 only if no chain input was provided
+    if (condition.standardContractType === 'timestamp') {
+      const chainInput = block.inputs?.find(input => input.id === 'chain');
+      if (!chainInput?.connected?.value) {
+        condition.chain = 1;
+      }
     }
 
     return condition;

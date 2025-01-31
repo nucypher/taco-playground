@@ -2,24 +2,42 @@ export type BlockType = 'condition' | 'operator' | 'value' | 'property';
 
 export type OperatorType = 'and' | 'or' | 'not' | 'greater-than' | 'less-than';
 export type ConditionType = 
-  | 'erc721-ownership' 
-  | 'erc1155-balance' 
-  | 'erc20-balance'
-  | 'time-lock'
-  | 'time-range'
-  | 'chain-id';
+  | 'customABIMultipleParameters'
+  | 'TStaking'
+  | 'SubscriptionManagerPayment'
+  | 'ERC1155_balance'
+  | 'ERC1155_balance_batch'
+  | 'ERC721_ownership'
+  | 'ERC721_balance'
+  | 'ERC20_balance'
+  | 'ETH_balance'
+  | 'specific_wallet_address'
+  | 'timestamp';
+
+export type BlockCategory = 'conditions' | 'operators' | 'values' | 'properties';
 
 export interface Block {
   id: string;
   type: 'condition' | 'operator' | 'value';
-  category: 'conditions' | 'operators' | 'values';
+  category: BlockCategory;
   label: string;
   inputType?: string;
   value?: string;
+  placeholder?: string;
+  isTemplate?: boolean;
   inputs?: BlockInput[];
   properties?: {
     chain?: number;
     comparator?: string;
+    conditionType?: string;
+    standardContractType?: string;
+    method?: string;
+    parameters?: any[];
+    returnValueTest?: {
+      comparator: string;
+      value: any;
+      index?: number;
+    };
     [key: string]: any;
   };
 }
@@ -31,9 +49,39 @@ export interface BlockInput {
   connected?: Block;
 }
 
+export interface TacoCondition {
+  conditionType: string;
+  contractAddress: string;
+  standardContractType?: string;
+  chain: number;
+  method: string;
+  parameters: any[];
+  functionAbi?: {
+    inputs: {
+      internalType: string;
+      name: string;
+      type: string;
+    }[];
+    name: string;
+    outputs: {
+      internalType: string;
+      name: string;
+      type: string;
+    }[];
+    stateMutability: string;
+    type: string;
+    constant?: boolean;
+  };
+  returnValueTest: {
+    comparator: string;
+    value: any;
+    index?: number;
+  };
+}
+
 export const BLOCK_CATEGORIES = {
-  CONDITIONS: 'Conditions',
-  OPERATORS: 'Operators',
-  VALUES: 'Values',
-  PROPERTIES: 'Properties'
+  CONDITIONS: 'conditions',
+  OPERATORS: 'operators',
+  VALUES: 'values',
+  PROPERTIES: 'properties'
 } as const; 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import MainLayout from './layout/MainLayout';
@@ -16,14 +16,27 @@ const TacoPlayground: React.FC = () => {
   const [currentCondition, setCurrentCondition] = useState<any>(null);
   const [messageKit, setMessageKit] = useState<any>(null);
 
+  useEffect(() => {
+    console.log('TacoPlayground currentCondition updated:', currentCondition);
+  }, [currentCondition]);
+
+  const handleConditionChange = (condition: any) => {
+    console.log('TacoPlayground handleConditionChange called with:', condition);
+    setCurrentCondition(condition);
+  };
+
   return (
-    <TacoProvider>
-      <DndProvider backend={HTML5Backend}>
+    <DndProvider backend={HTML5Backend}>
+      <TacoProvider>
         <MainLayout>
           <NetworkCheck />
           <div className="flex flex-col gap-3 max-w-[1600px] mx-auto">
             <WorkspaceLayout
-              workspace={<BlockWorkspace onConditionChange={setCurrentCondition} />}
+              workspace={
+                <BlockWorkspace 
+                  onConditionChange={handleConditionChange}
+                />
+              }
               preview={<JsonPreview condition={currentCondition} />}
             />
             
@@ -40,8 +53,8 @@ const TacoPlayground: React.FC = () => {
             </div>
           </div>
         </MainLayout>
-      </DndProvider>
-    </TacoProvider>
+      </TacoProvider>
+    </DndProvider>
   );
 };
 

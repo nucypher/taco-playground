@@ -1,82 +1,106 @@
 import { Block } from './BlockTypes';
 
 interface JsonCondition {
-  type?: string;
-  operator?: string;
-  value?: any;
-  returnValueTest?: any;
-  chain?: number;
+  operator?: 'and' | 'or' | 'not';
   left?: JsonCondition;
   right?: JsonCondition;
   condition?: JsonCondition;
-  [key: string]: any;
+  returnValueTest?: {
+    comparator: string;
+    value: string | number;
+  };
+  chain?: number;
+  contractAddress?: string;
+  standardContractType?: string;
+  method?: string;
+  parameters?: any[];
+  functionAbi?: {
+    name: string;
+    inputs: { type: string }[];
+    outputs: { type: string }[];
+  };
 }
 
 export const blocksToJson = (blocks: Block[]): any => {
   const processBlock = (block: Block): JsonCondition | null => {
-    if (!block) return null;
-
-    switch (block.type) {
-      case 'condition': {
-        if (block.id.startsWith('timelock')) {
-          const timestampInput = block.inputs?.find(i => i.id === 'returnValueTest');
-          if (timestampInput?.connected) {
-            const condition = {
-              chain: block.properties?.chain || 5001,
-              returnValueTest: {
-                comparator: block.properties?.comparator || '>=',
-                value: parseInt(timestampInput.connected.value || '0')
-              }
-            };
-            console.log('Generated timelock condition:', condition);
-            return condition;
-          }
-        }
-
-        // ... handle other condition types ...
-        return null;
-      }
-
-      case 'operator': {
-        const operator: JsonCondition = {
-          type: 'operator',
-          operator: block.id.split('-')[0], // Get base type without timestamp
-        };
-
-        // Handle different operator types
-        switch (block.id.split('-')[0]) {
-          case 'and':
-          case 'or': {
-            const left = block.inputs?.find(i => i.id === 'left')?.connected;
-            const right = block.inputs?.find(i => i.id === 'right')?.connected;
-            if (left) operator.left = processBlock(left);
-            if (right) operator.right = processBlock(right);
-            break;
-          }
-          case 'not': {
-            const condition = block.inputs?.find(i => i.id === 'condition')?.connected;
-            if (condition) operator.condition = processBlock(condition);
-            break;
-          }
-          case 'greater-than':
-          case 'less-than': {
-            const value = block.inputs?.find(i => i.id === 'value')?.connected;
-            const threshold = block.inputs?.find(i => i.id === 'threshold')?.connected;
-            if (value) operator.value = value.type === 'value' ? value.value : processBlock(value);
-            if (threshold) operator.threshold = threshold.type === 'value' ? threshold.value : processBlock(threshold);
-            break;
-          }
-        }
-
-        return operator;
-      }
-
-      case 'value':
-        return block.value;
-
-      default:
-        return null;
+    if (!block || !block.properties) {
+      return null;
     }
+
+    // Start with the properties
+    const condition: JsonCondition = {
+      ...block.properties
+    };
+
+    // Process inputs
+    block.inputs?.forEach(input => {
+      if (!input.connected?.value) {
+        return;
+      }
+
+      const connectedValue = input.connected?.value;
+      if (!connectedValue) {
+        return;
+      }
+
+      switch (input.id) {
+        case 'contractAddress':
+          condition.contractAddress = connectedValue;
+          break;
+        case 'chain':
+          condition.chain = parseInt(connectedValue);
+          break;
+        case 'minBalance':
+          condition.returnValueTest = {
+            comparator: '>',
+            value: connectedValue
+          };
+          break;
+        case 'timestamp':
+          if (condition.returnValueTest) {
+            condition.returnValueTest.value = parseInt(connectedValue);
+          } else {
+            condition.returnValueTest = {
+              comparator: '>=',
+              value: parseInt(connectedValue)
+            };
+          }
+          break;
+        case 'tokenId':
+          if (condition.parameters) {
+            condition.parameters = condition.parameters.map(p => 
+              p === ':tokenId' ? connectedValue : p
+            );
+          } else {
+            condition.parameters = [connectedValue];
+          }
+          break;
+        case 'method':
+          condition.method = connectedValue;
+          break;
+        case 'parameters':
+          try {
+            condition.parameters = JSON.parse(connectedValue);
+          } catch (e) {
+            console.error('Failed to parse parameters:', e);
+          }
+          break;
+        case 'functionAbi':
+          try {
+            condition.functionAbi = JSON.parse(connectedValue);
+          } catch (e) {
+            console.error('Failed to parse function ABI:', e);
+          }
+          break;
+      }
+    });
+
+    // Ensure chain is set to 1 if not specified for timestamp blocks
+    if (condition.standardContractType === 'timestamp' && !condition.chain) {
+      condition.chain = 1;
+    }
+
+    return condition;
   };
 
   // Process only top-level blocks
@@ -88,14 +112,23 @@ export const blocksToJson = (blocks: Block[]): any => {
   });
 
   if (topLevelBlocks.length === 0) return null;
-  if (topLevelBlocks.length === 1) return processBlock(topLevelBlocks[0]);
+  if (topLevelBlocks.length === 1) {
+    return processBlock(topLevelBlocks[0]) || null;
+  }
 
   // If multiple top-level blocks, combine them with AND
+  const conditions = topLevelBlocks
+    .map(block => processBlock(block))
+    .filter(condition => condition !== null);
+
+  if (conditions.length === 0) return null;
+  if (conditions.length === 1) return conditions[0];
+
   return {
     operator: 'and',
-    left: processBlock(topLevelBlocks[0]),
-    right: topLevelBlocks.length === 2 
-      ? processBlock(topLevelBlocks[1])
+    left: conditions[0],
+    right: conditions.length === 2 
+      ? conditions[1]
       : blocksToJson(topLevelBlocks.slice(1))
   };
 };

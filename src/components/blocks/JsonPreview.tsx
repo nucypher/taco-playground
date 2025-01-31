@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ConditionValidator from './ConditionValidator';
 
 interface JsonPreviewProps {
@@ -10,6 +10,11 @@ interface JsonPreviewProps {
 const JsonPreview: React.FC<JsonPreviewProps> = ({ condition }) => {
   const [copied, setCopied] = useState(false);
   const formattedJson = condition ? JSON.stringify(condition, null, 2) : '';
+
+  useEffect(() => {
+    console.log('JsonPreview received condition:', condition);
+    console.log('Formatted JSON:', formattedJson);
+  }, [condition, formattedJson]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(formattedJson);
@@ -74,7 +79,7 @@ const JsonPreview: React.FC<JsonPreviewProps> = ({ condition }) => {
           </div>
         </div>
         <div className="p-4 flex-1 overflow-auto">
-          <pre className="text-green-400 text-sm font-mono">
+          <pre className="text-green-400 text-sm font-mono whitespace-pre-wrap">
             {formattedJson || '// Drag blocks to generate condition JSON'}
           </pre>
         </div>

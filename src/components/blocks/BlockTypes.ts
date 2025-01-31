@@ -18,35 +18,22 @@ export type BlockCategory = 'conditions' | 'operators' | 'values' | 'properties'
 
 export interface Block {
   id: string;
-  type: 'condition' | 'operator' | 'value';
-  category: BlockCategory;
+  type: string;
+  category?: string;
   label: string;
-  inputType?: string;
-  value?: string;
-  placeholder?: string;
-  isTemplate?: boolean;
   inputs?: BlockInput[];
-  properties?: {
-    chain?: number;
-    comparator?: string;
-    conditionType?: string;
-    standardContractType?: string;
-    method?: string;
-    parameters?: any[];
-    returnValueTest?: {
-      comparator: string;
-      value: any;
-      index?: number;
-    };
-    [key: string]: any;
-  };
+  properties?: Record<string, any>;
+  isTemplate?: boolean;
+  value?: string;
 }
 
 export interface BlockInput {
   id: string;
-  type: string[];
+  type: string | string[];
   label: string;
   connected?: Block;
+  value?: string;
+  inputType?: 'text' | 'number';
 }
 
 export interface TacoCondition {

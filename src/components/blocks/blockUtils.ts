@@ -2,9 +2,8 @@ import { Block } from './BlockTypes';
 
 interface JsonCondition {
   operator?: 'and' | 'or' | 'not';
-  left?: JsonCondition;
-  right?: JsonCondition;
-  condition?: JsonCondition;
+  conditionType?: string;
+  operands?: JsonCondition[];
   returnValueTest?: {
     comparator: string;
     value: string | number;
@@ -32,29 +31,47 @@ export const blocksToJson = (blocks: Block[]): any => {
       ...block.properties
     };
 
-    // Process inputs
-    block.inputs?.forEach(input => {
-      if (!input.connected?.value) {
-        return;
-      }
+    // Handle operator blocks differently
+    if (block.type === 'operator') {
+      // Find all connected conditions
+      const connectedConditions = block.inputs
+        ?.filter(input => input.connected)
+        .map(input => input.connected)
+        .filter((block): block is Block => block !== undefined) || [];
 
-      const connectedValue = input.connected?.value;
-      if (!connectedValue) {
+      // Process each connected condition
+      condition.operands = connectedConditions
+        .map(connectedBlock => processBlock(connectedBlock))
+        .filter((condition): condition is JsonCondition => condition !== null);
+
+      // Remove any left/right properties that might exist
+      const anyCondition = condition as any;
+      delete anyCondition.left;
+      delete anyCondition.right;
+
+      return condition;
+    }
+
+    // Process inputs for condition blocks
+    block.inputs?.forEach(input => {
+      // Check for direct value first, then fall back to connected value
+      const value = input.value || input.connected?.value;
+      if (!value) {
         return;
       }
 
       switch (input.id) {
         case 'contractAddress':
-          condition.contractAddress = connectedValue.trim();
+          condition.contractAddress = value.trim();
           break;
         case 'chain':
-          const chainId = parseInt(connectedValue);
+          const chainId = parseInt(value);
           if (!isNaN(chainId)) {
             condition.chain = chainId;
           }
           break;
         case 'minBalance':
-          const balance = parseFloat(connectedValue);
+          const balance = parseFloat(value);
           if (!isNaN(balance)) {
             condition.returnValueTest = {
               comparator: '>',
@@ -64,7 +81,7 @@ export const blocksToJson = (blocks: Block[]): any => {
           break;
         case 'timestamp':
         case 'minTimestamp':
-          const timestamp = parseInt(connectedValue);
+          const timestamp = parseInt(value);
           if (!isNaN(timestamp)) {
             condition.returnValueTest = {
               comparator: '>=',
@@ -75,25 +92,25 @@ export const blocksToJson = (blocks: Block[]): any => {
         case 'tokenId':
           if (condition.parameters) {
             condition.parameters = condition.parameters.map(p => 
-              p === ':tokenId' ? connectedValue : p
+              p === ':tokenId' ? value : p
             );
           } else {
-            condition.parameters = [connectedValue];
+            condition.parameters = [value];
           }
           break;
         case 'method':
-          condition.method = connectedValue;
+          condition.method = value;
           break;
         case 'parameters':
           try {
-            condition.parameters = JSON.parse(connectedValue);
+            condition.parameters = JSON.parse(value);
           } catch (e) {
             console.error('Failed to parse parameters:', e);
           }
           break;
         case 'functionAbi':
           try {
-            condition.functionAbi = JSON.parse(connectedValue);
+            condition.functionAbi = JSON.parse(value);
           } catch (e) {
             console.error('Failed to parse function ABI:', e);
           }
@@ -104,7 +121,7 @@ export const blocksToJson = (blocks: Block[]): any => {
     // For timestamp blocks, ensure chain is set to 1 only if no chain input was provided
     if (condition.standardContractType === 'timestamp') {
       const chainInput = block.inputs?.find(input => input.id === 'chain');
-      if (!chainInput?.connected?.value) {
+      if (!chainInput?.value && !chainInput?.connected?.value) {
         condition.chain = 1;
       }
     }
@@ -134,11 +151,9 @@ export const blocksToJson = (blocks: Block[]): any => {
   if (conditions.length === 1) return conditions[0];
 
   return {
+    conditionType: 'compound',
     operator: 'and',
-    left: conditions[0],
-    right: conditions.length === 2 
-      ? conditions[1]
-      : blocksToJson(topLevelBlocks.slice(1))
+    operands: conditions
   };
 };
 

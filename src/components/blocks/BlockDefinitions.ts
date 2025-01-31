@@ -1,6 +1,36 @@
 import { Block, BLOCK_CATEGORIES } from './BlockTypes';
 
 export const AVAILABLE_BLOCKS: Block[] = [
+  // Operator Blocks
+  {
+    id: 'and-operator',
+    type: 'operator',
+    category: BLOCK_CATEGORIES.OPERATORS,
+    label: 'AND',
+    inputs: [
+      { id: 'condition-1', type: ['condition', 'operator'], label: 'Add Condition' }
+    ],
+    properties: {
+      conditionType: 'compound',
+      operator: 'and',
+      operands: []
+    }
+  },
+  {
+    id: 'or-operator',
+    type: 'operator',
+    category: BLOCK_CATEGORIES.OPERATORS,
+    label: 'OR',
+    inputs: [
+      { id: 'condition-1', type: ['condition', 'operator'], label: 'Add Condition' }
+    ],
+    properties: {
+      conditionType: 'compound',
+      operator: 'or',
+      operands: []
+    }
+  },
+
   // Time Conditions
   {
     id: 'time-lock-template',
@@ -8,8 +38,8 @@ export const AVAILABLE_BLOCKS: Block[] = [
     category: BLOCK_CATEGORIES.CONDITIONS,
     label: 'Time Lock',
     inputs: [
-      { id: 'chain', type: ['value'], label: 'Chain ID' },
-      { id: 'timestamp', type: ['value'], label: 'Unix Timestamp' }
+      { id: 'chain', type: ['value'], label: 'Chain ID', inputType: 'number' },
+      { id: 'timestamp', type: ['value'], label: 'Unix Timestamp', inputType: 'number' }
     ],
     properties: {
       conditionType: 'contract',
@@ -29,8 +59,8 @@ export const AVAILABLE_BLOCKS: Block[] = [
     category: BLOCK_CATEGORIES.CONDITIONS,
     label: 'Timestamp',
     inputs: [
-      { id: 'chain', type: ['value'], label: 'Chain ID' },
-      { id: 'minTimestamp', type: ['value'], label: 'Minimum Timestamp' },
+      { id: 'chain', type: ['value'], label: 'Chain ID', inputType: 'number' },
+      { id: 'minTimestamp', type: ['value'], label: 'Minimum Timestamp', inputType: 'number' },
     ],
     properties: {
       conditionType: 'contract',
@@ -52,8 +82,8 @@ export const AVAILABLE_BLOCKS: Block[] = [
     label: 'ERC20 Balance',
     inputs: [
       { id: 'contractAddress', type: ['value'], label: 'Token Address' },
-      { id: 'chain', type: ['value'], label: 'Chain ID' },
-      { id: 'minBalance', type: ['value'], label: 'Min Balance' },
+      { id: 'chain', type: ['value'], label: 'Chain ID', inputType: 'number' },
+      { id: 'minBalance', type: ['value'], label: 'Min Balance', inputType: 'number' },
     ],
     properties: {
       conditionType: 'contract',
@@ -73,8 +103,8 @@ export const AVAILABLE_BLOCKS: Block[] = [
     label: 'ERC721 Ownership',
     inputs: [
       { id: 'contractAddress', type: ['value'], label: 'Contract Address' },
-      { id: 'tokenId', type: ['value'], label: 'Token ID' },
-      { id: 'chain', type: ['value'], label: 'Chain ID' },
+      { id: 'tokenId', type: ['value'], label: 'Token ID', inputType: 'number' },
+      { id: 'chain', type: ['value'], label: 'Chain ID', inputType: 'number' },
     ],
     properties: {
       conditionType: 'contract',
@@ -93,9 +123,9 @@ export const AVAILABLE_BLOCKS: Block[] = [
     label: 'ERC1155 Balance',
     inputs: [
       { id: 'contractAddress', type: ['value'], label: 'Contract Address' },
-      { id: 'tokenId', type: ['value'], label: 'Token ID' },
-      { id: 'chain', type: ['value'], label: 'Chain ID' },
-      { id: 'minBalance', type: ['value'], label: 'Min Balance' },
+      { id: 'tokenId', type: ['value'], label: 'Token ID', inputType: 'number' },
+      { id: 'chain', type: ['value'], label: 'Chain ID', inputType: 'number' },
+      { id: 'minBalance', type: ['value'], label: 'Min Balance', inputType: 'number' },
     ],
     properties: {
       conditionType: 'contract',
@@ -115,8 +145,8 @@ export const AVAILABLE_BLOCKS: Block[] = [
     category: BLOCK_CATEGORIES.CONDITIONS,
     label: 'ETH Balance',
     inputs: [
-      { id: 'chain', type: ['value'], label: 'Chain ID' },
-      { id: 'minBalance', type: ['value'], label: 'Min Balance (Wei)' },
+      { id: 'chain', type: ['value'], label: 'Chain ID', inputType: 'number' },
+      { id: 'minBalance', type: ['value'], label: 'Min Balance (Wei)', inputType: 'number' },
     ],
     properties: {
       conditionType: 'contract',
@@ -134,7 +164,7 @@ export const AVAILABLE_BLOCKS: Block[] = [
     inputs: [
       { id: 'contractAddress', type: ['value'], label: 'Contract Address' },
       { id: 'method', type: ['value'], label: 'Method Name' },
-      { id: 'chain', type: ['value'], label: 'Chain ID' },
+      { id: 'chain', type: ['value'], label: 'Chain ID', inputType: 'number' },
       { id: 'parameters', type: ['value'], label: 'Parameters (JSON)' },
       { id: 'abi', type: ['value'], label: 'Function ABI (JSON)' },
     ],

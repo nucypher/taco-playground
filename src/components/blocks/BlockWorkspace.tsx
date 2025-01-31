@@ -37,11 +37,15 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
     );
   }, []);
 
+  const handleBlockRemove = useCallback((blockId: string) => {
+    setBlocks(prev => prev.filter(block => block.id !== blockId));
+  }, []);
+
   const [{ isOver, canDrop }, drop] = useDrop(() => ({
     accept: 'block',
     canDrop: (item: any) => {
-      // Only allow condition blocks to be dropped in the workspace
-      return item.type === 'condition' && item.isTemplate;
+      // Allow both condition and operator blocks in the workspace
+      return (item.type === 'condition' || item.type === 'operator') && item.isTemplate;
     },
     drop: (item: any, monitor) => {
       if (monitor.canDrop() && item.isTemplate) {
@@ -89,11 +93,12 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
             block={block}
             isWorkspaceBlock={true}
             onBlockUpdate={handleBlockUpdate}
+            onBlockRemove={handleBlockRemove}
           />
         ))}
         {blocks.length === 0 && (
           <div className="text-center text-gray-500 py-8">
-            Drag condition blocks here
+            Drag condition or operator blocks here
           </div>
         )}
       </div>

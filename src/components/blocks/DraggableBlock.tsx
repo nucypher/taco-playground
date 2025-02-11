@@ -9,14 +9,12 @@ interface DraggableBlockProps {
   block: Block;
   isWorkspaceBlock?: boolean;
   onBlockUpdate?: (updatedBlock: Block) => void;
-  onBlockRemove?: (blockId: string) => void;
 }
 
 const DraggableBlock: React.FC<DraggableBlockProps> = ({ 
   block,
   isWorkspaceBlock = false,
   onBlockUpdate,
-  onBlockRemove,
 }) => {
   const elementRef = useRef<HTMLDivElement>(null);
 
@@ -68,14 +66,9 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
           });
         }
         onBlockUpdate(updatedBlock);
-
-        // If the dropped block was from the workspace, remove it from its original location
-        if (!item.isTemplate && onBlockRemove) {
-          onBlockRemove(item.id);
-        }
       }
     }
-  }, [block, onBlockUpdate, onBlockRemove]);
+  }, [block, onBlockUpdate]);
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'block',
@@ -136,22 +129,15 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
         console.log('Target input:', targetInput);
         
         if (targetInput) {
-          let processedValue = value;
-          
-          // Convert to number if it's a number input
-          if (targetInput.inputType === 'number') {
-            const num = parseFloat(value);
-            if (!isNaN(num)) {
-              processedValue = num.toString();
-            }
-          }
+          // Always store the raw value to preserve user input
+          targetInput.value = value;
           
           // Create a new connected block with updated inputs
           const updatedConnectedBlock = {
             ...connectedBlock,
             inputs: connectedBlock.inputs?.map((input: BlockInput) => 
               input.id === inputId 
-                ? { ...input, value: processedValue }
+                ? { ...input, value }
                 : input
             )
           };
@@ -169,17 +155,8 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
       // Handle top-level inputs
       const input = updatedBlock.inputs?.find((i: BlockInput) => i.id === inputId);
       if (input) {
-        let processedValue = value;
-        
-        // Convert to number if it's a number input
-        if (input.inputType === 'number') {
-          const num = parseFloat(value);
-          if (!isNaN(num)) {
-            processedValue = num.toString();
-          }
-        }
-        
-        input.value = processedValue;
+        // Always store the raw value to preserve user input
+        input.value = value;
         onBlockUpdate(updatedBlock);
       }
     }

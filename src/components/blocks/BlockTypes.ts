@@ -33,7 +33,8 @@ export interface BlockInput {
   label: string;
   connected?: Block;
   value?: string;
-  inputType?: 'text' | 'number';
+  inputType?: string;
+  placeholder?: string;
 }
 
 export interface TacoCondition {

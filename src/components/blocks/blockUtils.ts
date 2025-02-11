@@ -56,7 +56,7 @@ export const blocksToJson = (blocks: Block[]): any => {
     block.inputs?.forEach(input => {
       // Check for direct value first, then fall back to connected value
       const value = input.value || input.connected?.value;
-      if (!value) {
+      if (!value && value !== '0') {  // Allow zero as a valid value
         return;
       }
 
@@ -66,8 +66,12 @@ export const blocksToJson = (blocks: Block[]): any => {
           break;
         case 'chain':
           const chainId = parseInt(value);
-          if (!isNaN(chainId)) {
-            condition.chain = chainId;
+          if (!isNaN(chainId) && [1, 137, 80002, 11155111].includes(chainId)) {
+            // Ensure chain is a literal number
+            condition.chain = Number(chainId);
+          } else {
+            // If the chain ID is not valid, remove it from the condition
+            delete condition.chain;
           }
           break;
         case 'minBalance':
@@ -83,6 +87,10 @@ export const blocksToJson = (blocks: Block[]): any => {
         case 'minTimestamp':
           const timestamp = parseInt(value);
           if (!isNaN(timestamp)) {
+            // Clear out any unwanted properties
+            delete condition.parameters;
+            condition.conditionType = 'time';
+            condition.method = 'blocktime';
             condition.returnValueTest = {
               comparator: '>=',
               value: timestamp
@@ -121,7 +129,8 @@ export const blocksToJson = (blocks: Block[]): any => {
     // For timestamp blocks, ensure chain is set to 1 only if no chain input was provided
     if (condition.standardContractType === 'timestamp') {
       const chainInput = block.inputs?.find(input => input.id === 'chain');
-      if (!chainInput?.value && !chainInput?.connected?.value) {
+      const chainValue = chainInput?.value || chainInput?.connected?.value;
+      if (!chainValue && chainValue !== '0') {
         condition.chain = 1;
       }
     }

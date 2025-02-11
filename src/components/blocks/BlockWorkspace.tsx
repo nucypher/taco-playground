@@ -22,24 +22,33 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
     // Convert to string for comparison
     const jsonString = JSON.stringify(json);
     
+    console.log('BlockWorkspace: Generating JSON', {
+      blocks,
+      json,
+      jsonString,
+      prevJson: prevJsonRef.current
+    });
+    
     // Only update if the JSON has actually changed
     if (jsonString !== prevJsonRef.current) {
+      console.log('BlockWorkspace: JSON changed, updating');
       prevJsonRef.current = jsonString;
       onConditionChange(json);
     }
   }, [blocks, onConditionChange]);
 
   const handleBlockUpdate = useCallback((updatedBlock: Block) => {
+    console.log('BlockWorkspace: Handling block update', {
+      updatedBlock,
+      currentBlocks: blocks
+    });
+    
     setBlocks(prev => 
       prev.map(block => 
         block.id === updatedBlock.id ? updatedBlock : block
       )
     );
-  }, []);
-
-  const handleBlockRemove = useCallback((blockId: string) => {
-    setBlocks(prev => prev.filter(block => block.id !== blockId));
-  }, []);
+  }, [blocks]);
 
   const [{ isOver, canDrop }, drop] = useDrop(() => ({
     accept: 'block',
@@ -93,7 +102,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
             block={block}
             isWorkspaceBlock={true}
             onBlockUpdate={handleBlockUpdate}
-            onBlockRemove={handleBlockRemove}
           />
         ))}
         {blocks.length === 0 && (

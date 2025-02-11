@@ -9,97 +9,115 @@ interface EncryptionPanelProps {
   onMessageKitGenerated: (messageKit: any) => void;
 }
 
-// Helper function to parse Zod validation errors
-const parseValidationError = (errorMessage: string) => {
-  try {
-    // Extract the JSON part from the error message
-    const jsonStr = errorMessage.replace('Invalid condition: ', '');
-    const errorData = JSON.parse(jsonStr);
-
-    // Function to extract unique chain validation errors
-    const extractChainErrors = (errors: any[]): Set<number> => {
-      const chainValues = new Set<number>();
-      errors.forEach(error => {
-        if (error.issues) {
-          error.issues.forEach((issue: any) => {
-            if (issue.unionErrors) {
-              issue.unionErrors.forEach((unionError: any) => {
-                if (unionError.issues) {
-                  unionError.issues.forEach((chainIssue: any) => {
-                    if (chainIssue.expected && typeof chainIssue.expected === 'number') {
-                      chainValues.add(chainIssue.expected);
-                    }
-                  });
-                }
-              });
-            } else if (issue.expected && typeof issue.expected === 'number') {
-              chainValues.add(issue.expected);
-            }
-          });
-        }
-      });
-      return chainValues;
-    };
-
-    // Extract validation issues
-    const validationIssues = new Set<string>();
-    const chainValues = extractChainErrors(errorData);
-
-    if (chainValues.size > 0) {
-      validationIssues.add(`Chain must be one of: ${Array.from(chainValues).join(', ')}`);
-    }
-
-    // Add other validation issues
-    const addIssues = (error: any) => {
-      if (error.issues) {
-        error.issues.forEach((issue: any) => {
-          if (issue.message && !issue.message.includes('Invalid literal value')) {
-            // Clean up the message
-            let message = issue.message;
-            if (issue.expected) {
-              message = `Expected ${issue.expected}`;
-              if (issue.received) {
-                message += `, received ${issue.received}`;
-              }
-            }
-            if (issue.path && issue.path.length > 0) {
-              message += ` at ${issue.path.join('.')}`;
-            }
-            validationIssues.add(message);
-          }
-          if (issue.unionErrors) {
-            issue.unionErrors.forEach((unionError: any) => addIssues(unionError));
-          }
-        });
-      }
-    };
-
-    errorData.forEach(addIssues);
-
-    // If no issues were found, add the original error message
-    if (validationIssues.size === 0) {
-      validationIssues.add(errorMessage);
-    }
-
-    return Array.from(validationIssues);
-  } catch (e) {
-    console.error('Error parsing validation error:', e);
-    // If parsing fails, return the original error message
-    return [errorMessage];
-  }
-};
-
 const EncryptionPanel: React.FC<EncryptionPanelProps> = ({ 
   condition,
   onMessageKitGenerated 
 }) => {
   const [message, setMessage] = useState('');
   const [isEncrypting, setIsEncrypting] = useState(false);
-  const [errors, setErrors] = useState<string[]>([]);
+  const [error, setError] = useState('');
+
+  const createCondition = (conditionData: any) => {
+    // Helper to ensure we use a valid chain ID
+    const getValidChainId = (chain: number) => {
+      const validChains = [137, 80002, 11155111, 1];
+      const chainId = validChains.find(id => id === chain);
+      if (!chainId) {
+        throw new Error(`Invalid chain ID. Must be one of: ${validChains.join(', ')}`);
+      }
+      return chainId;
+    };
+
+    switch (conditionData.conditionType) {
+      case 'time':
+        // Time conditions use RpcCondition with eth_getBalance
+        console.log('Creating time condition from:', conditionData);
+        // Extract only the properties we need and ensure chain is a literal number
+        const { chain, returnValueTest } = conditionData;
+        const validChain = getValidChainId(chain);
+        console.log('Using chain ID:', validChain, 'type:', typeof validChain);
+        
+        // Create a proper time condition with all required fields
+        const timeCondition = new conditions.base.rpc.RpcCondition({
+          chain: validChain,
+          method: 'eth_getBalance',
+          parameters: ['0x0000000000000000000000000000000000000000', 'latest'],
+          returnValueTest: {
+            comparator: returnValueTest?.comparator || '>=',
+            value: returnValueTest?.value || 0
+          }
+        });
+        console.log('Created time condition with full details:', {
+          condition: timeCondition,
+          schema: timeCondition.schema,
+          value: timeCondition.value
+        });
+        return timeCondition;
+
+      case 'contract':
+      case 'erc20':
+      case 'erc721':
+      case 'erc1155':
+        // All token-related conditions use ContractCondition
+        return new conditions.base.contract.ContractCondition({
+          contractAddress: conditionData.contractAddress,
+          chain: getValidChainId(conditionData.chain),
+          standardContractType: conditionData.standardContractType,
+          method: conditionData.method || 'balanceOf',
+          parameters: conditionData.parameters || [':userAddress'],
+          returnValueTest: {
+            comparator: conditionData.returnValueTest?.comparator || '>',
+            value: conditionData.returnValueTest?.value || 0
+          }
+        });
+
+      case 'rpc':
+        return new conditions.base.rpc.RpcCondition({
+          chain: getValidChainId(conditionData.chain),
+          method: conditionData.method || 'eth_getBalance',
+          parameters: conditionData.parameters || [':userAddress', 'latest'],
+          returnValueTest: {
+            comparator: conditionData.returnValueTest?.comparator || '>=',
+            value: conditionData.returnValueTest?.value || 0
+          }
+        });
+
+      case 'compound':
+        // Process each operand recursively
+        console.log('Processing compound condition:', conditionData);
+        const operands = conditionData.operands.map((operand: any) => {
+          console.log('Processing operand:', operand);
+          const processedOperand = createCondition(operand);
+          console.log('Processed operand:', processedOperand);
+          return processedOperand.value; // Extract the value from the condition
+        });
+
+        console.log('Creating compound condition with operands:', operands);
+        // Create compound condition
+        const compoundCondition = new conditions.compound.CompoundCondition({
+          operator: conditionData.operator,
+          operands: operands.map((operand: { chain: number; returnValueTest?: { comparator: string; value: any } }) => ({
+            ...operand,
+            chain: getValidChainId(operand.chain), // Ensure chain is a valid number
+            method: 'eth_getBalance', // Ensure method is set
+            parameters: ['0x0000000000000000000000000000000000000000', 'latest'], // Ensure parameters are set
+            returnValueTest: {
+              comparator: operand.returnValueTest?.comparator || '>=',
+              value: operand.returnValueTest?.value || 0
+            }
+          }))
+        });
+        console.log('Created compound condition:', compoundCondition);
+        return compoundCondition;
+
+      default:
+        throw new Error(`Unsupported condition type: ${conditionData.conditionType}`);
+    }
+  };
 
   const handleEncrypt = async () => {
     if (!condition || !message) return;
-    setErrors([]);
+    setError('');
 
     try {
       setIsEncrypting(true);
@@ -115,97 +133,25 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
         throw new Error('No accounts found');
       }
 
-      console.log('Starting encryption with condition:', condition);
-
       const signer = provider.getSigner();
 
-      // Create a TACo condition based on the condition type
-      let tacoCondition;
-      try {
-        if (condition.conditionType === 'compound') {
-          // Process compound conditions (AND/OR)
-          const processedOperands = await Promise.all(condition.operands.map(async (operand: any) => {
-            if (operand.standardContractType === 'timestamp') {
-              return new conditions.base.time.TimeCondition({
-                chain: operand.chain,
-                method: 'blocktime',
-                returnValueTest: operand.returnValueTest
-              });
-            } else if (operand.standardContractType === 'ERC20') {
-              return new conditions.base.contract.ContractCondition({
-                chain: operand.chain,
-                contractAddress: operand.contractAddress,
-                standardContractType: 'ERC20',
-                method: 'balanceOf',
-                parameters: [':userAddress'],
-                returnValueTest: operand.returnValueTest
-              });
-            }
-            throw new Error(`Unsupported condition type: ${operand.standardContractType}`);
-          }));
-
-          if (condition.operator === 'and') {
-            tacoCondition = new conditions.compound.CompoundCondition({
-              operator: 'and',
-              operands: processedOperands
-            });
-          } else if (condition.operator === 'or') {
-            tacoCondition = new conditions.compound.CompoundCondition({
-              operator: 'or',
-              operands: processedOperands
-            });
-          } else {
-            throw new Error('Unsupported compound operator');
-          }
-        } else if (condition.standardContractType === 'timestamp') {
-          tacoCondition = new conditions.base.time.TimeCondition({
-            chain: condition.chain,
-            method: 'blocktime',
-            returnValueTest: condition.returnValueTest
-          });
-        } else if (condition.standardContractType === 'ERC20') {
-          tacoCondition = new conditions.base.contract.ContractCondition({
-            chain: condition.chain,
-            contractAddress: condition.contractAddress,
-            standardContractType: 'ERC20',
-            method: 'balanceOf',
-            parameters: [':userAddress'],
-            returnValueTest: condition.returnValueTest
-          });
-        } else {
-          throw new Error(`Unsupported condition type: ${condition.standardContractType}`);
-        }
-      } catch (conditionError: any) {
-        console.error('Condition creation error:', conditionError);
-        if (conditionError.message.includes('Invalid condition:')) {
-          setErrors(parseValidationError(conditionError.message));
-        } else {
-          setErrors([conditionError.message]);
-        }
-        return;
-      }
+      // Create a proper Taco condition object from the JSON
+      const tacoCondition = createCondition(condition);
+      console.log('Created Taco condition:', tacoCondition);
 
       const messageKit = await encrypt(
         provider,
         domains.TESTNET,
         message,
-        tacoCondition,
-        6, // Ritual ID #6 (as number)
+        tacoCondition, // Use the created Taco condition object
+        6, // Ritual ID #6
         signer
       );
 
       onMessageKitGenerated(messageKit);
     } catch (error: any) {
       console.error('Encryption error:', error);
-      if (typeof error === 'object' && error.message) {
-        if (error.message.includes('Invalid condition:')) {
-          setErrors(parseValidationError(error.message));
-        } else {
-          setErrors([error.message]);
-        }
-      } else {
-        setErrors(['Failed to encrypt message']);
-      }
+      setError(error.message || 'Failed to encrypt message');
     } finally {
       setIsEncrypting(false);
     }
@@ -242,13 +188,9 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
         </button>
       </div>
 
-      {errors.length > 0 && (
-        <div className="p-3 bg-red-900/50 border border-red-700 rounded-md space-y-1">
-          {errors.map((error, index) => (
-            <p key={index} className="text-sm text-red-200">
-              • {error}
-            </p>
-          ))}
+      {error && (
+        <div className="p-3 bg-red-900/50 border border-red-700 rounded-md">
+          <p className="text-sm text-red-200">{error}</p>
         </div>
       )}
     </div>

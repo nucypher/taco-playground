@@ -59,18 +59,22 @@ export const AVAILABLE_BLOCKS: Block[] = [
     category: BLOCK_CATEGORIES.CONDITIONS,
     label: 'Timestamp',
     inputs: [
-      { id: 'chain', type: ['value'], label: 'Chain ID', inputType: 'number' },
-      { id: 'minTimestamp', type: ['value'], label: 'Minimum Timestamp', inputType: 'number' },
+      { 
+        id: 'chain', 
+        type: ['value'], 
+        label: 'Chain ID', 
+        inputType: 'number',
+        placeholder: '1 (ETH), 137 (Polygon), 80002 (Amoy), 11155111 (Sepolia)'
+      },
+      { 
+        id: 'minTimestamp', 
+        type: ['value'], 
+        label: 'Minimum Timestamp', 
+        inputType: 'number' 
+      },
     ],
     properties: {
-      conditionType: 'contract',
-      standardContractType: 'timestamp',
-      method: 'eth_getBlockByNumber',
-      parameters: ['latest'],
-      returnValueTest: {
-        comparator: '>=',
-        value: null
-      }
+      conditionType: 'time'
     }
   },
 
@@ -82,12 +86,17 @@ export const AVAILABLE_BLOCKS: Block[] = [
     label: 'ERC20 Balance',
     inputs: [
       { id: 'contractAddress', type: ['value'], label: 'Token Address' },
-      { id: 'chain', type: ['value'], label: 'Chain ID', inputType: 'number' },
+      { 
+        id: 'chain', 
+        type: ['value'], 
+        label: 'Chain ID', 
+        inputType: 'number',
+        placeholder: '1 (ETH), 137 (Polygon), 80002 (Amoy), 11155111 (Sepolia)'
+      },
       { id: 'minBalance', type: ['value'], label: 'Min Balance', inputType: 'number' },
     ],
     properties: {
-      conditionType: 'contract',
-      standardContractType: 'ERC20',
+      conditionType: 'erc20',
       method: 'balanceOf',
       parameters: [':userAddress'],
       returnValueTest: {

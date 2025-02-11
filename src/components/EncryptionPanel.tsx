@@ -59,10 +59,12 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
       case 'erc721':
       case 'erc1155':
         // All token-related conditions use ContractCondition
-        return new conditions.base.contract.ContractCondition({
+        const contractCondition = new conditions.base.contract.ContractCondition({
           contractAddress: conditionData.contractAddress,
           chain: getValidChainId(conditionData.chain),
-          standardContractType: conditionData.standardContractType,
+          // Only include standardContractType for specific contract types
+          ...(conditionData.conditionType === 'erc20' ? { standardContractType: 'ERC20' } : {}),
+          ...(conditionData.conditionType === 'erc721' ? { standardContractType: 'ERC721' } : {}),
           method: conditionData.method || 'balanceOf',
           parameters: conditionData.parameters || [':userAddress'],
           returnValueTest: {
@@ -70,6 +72,8 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
             value: conditionData.returnValueTest?.value || 0
           }
         });
+        console.log('Created contract condition:', contractCondition);
+        return contractCondition;
 
       case 'rpc':
         return new conditions.base.rpc.RpcCondition({

@@ -96,7 +96,8 @@ export const AVAILABLE_BLOCKS: Block[] = [
       { id: 'minBalance', type: ['value'], label: 'Min Balance', inputType: 'number' },
     ],
     properties: {
-      conditionType: 'erc20',
+      conditionType: 'contract',
+      standardContractType: 'ERC20',
       method: 'balanceOf',
       parameters: [':userAddress'],
       returnValueTest: {

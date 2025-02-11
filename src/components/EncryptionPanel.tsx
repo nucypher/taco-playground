@@ -30,7 +30,7 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
 
     switch (conditionData.conditionType) {
       case 'time':
-        // Time conditions use RpcCondition with eth_getBalance
+        // Time conditions should use blocktime method
         console.log('Creating time condition from:', conditionData);
         // Extract only the properties we need and ensure chain is a literal number
         const { chain, returnValueTest } = conditionData;
@@ -38,10 +38,9 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
         console.log('Using chain ID:', validChain, 'type:', typeof validChain);
         
         // Create a proper time condition with all required fields
-        const timeCondition = new conditions.base.rpc.RpcCondition({
+        const timeCondition = new conditions.base.time.TimeCondition({
           chain: validChain,
-          method: 'eth_getBalance',
-          parameters: ['0x0000000000000000000000000000000000000000', 'latest'],
+          method: 'blocktime',
           returnValueTest: {
             comparator: returnValueTest?.comparator || '>=',
             value: returnValueTest?.value || 0
@@ -62,11 +61,12 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
         const contractCondition = new conditions.base.contract.ContractCondition({
           contractAddress: conditionData.contractAddress,
           chain: getValidChainId(conditionData.chain),
-          // Only include standardContractType for specific contract types
-          ...(conditionData.conditionType === 'erc20' ? { standardContractType: 'ERC20' } : {}),
-          ...(conditionData.conditionType === 'erc721' ? { standardContractType: 'ERC721' } : {}),
-          method: conditionData.method || 'balanceOf',
-          parameters: conditionData.parameters || [':userAddress'],
+          method: 'balanceOf',
+          parameters: [':userAddress'],
+          // Include standardContractType for ERC20
+          ...(conditionData.standardContractType === 'ERC20' ? {
+            standardContractType: 'ERC20'
+          } : {}),
           returnValueTest: {
             comparator: conditionData.returnValueTest?.comparator || '>',
             value: conditionData.returnValueTest?.value || 0
@@ -91,25 +91,36 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
         console.log('Processing compound condition:', conditionData);
         const operands = conditionData.operands.map((operand: any) => {
           console.log('Processing operand:', operand);
-          const processedOperand = createCondition(operand);
-          console.log('Processed operand:', processedOperand);
-          return processedOperand.value; // Extract the value from the condition
+          // For time conditions, keep them as is
+          if (operand.conditionType === 'time') {
+            return {
+              conditionType: 'time',
+              chain: getValidChainId(operand.chain),
+              method: 'blocktime',
+              returnValueTest: operand.returnValueTest
+            };
+          }
+          // For ERC20 conditions, ensure we include standardContractType
+          if (operand.standardContractType === 'ERC20') {
+            return {
+              conditionType: 'contract',
+              contractAddress: operand.contractAddress,
+              standardContractType: 'ERC20',
+              chain: getValidChainId(operand.chain),
+              method: 'balanceOf',
+              parameters: [':userAddress'],
+              returnValueTest: operand.returnValueTest
+            };
+          }
+          // For other conditions, use as is
+          return operand;
         });
 
         console.log('Creating compound condition with operands:', operands);
         // Create compound condition
         const compoundCondition = new conditions.compound.CompoundCondition({
           operator: conditionData.operator,
-          operands: operands.map((operand: { chain: number; returnValueTest?: { comparator: string; value: any } }) => ({
-            ...operand,
-            chain: getValidChainId(operand.chain), // Ensure chain is a valid number
-            method: 'eth_getBalance', // Ensure method is set
-            parameters: ['0x0000000000000000000000000000000000000000', 'latest'], // Ensure parameters are set
-            returnValueTest: {
-              comparator: operand.returnValueTest?.comparator || '>=',
-              value: operand.returnValueTest?.value || 0
-            }
-          }))
+          operands
         });
         console.log('Created compound condition:', compoundCondition);
         return compoundCondition;

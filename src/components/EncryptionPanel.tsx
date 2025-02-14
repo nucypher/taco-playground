@@ -7,15 +7,16 @@ import { ethers } from 'ethers';
 interface EncryptionPanelProps {
   condition: any;
   onMessageKitGenerated: (messageKit: any) => void;
+  onError: (error: string) => void;
 }
 
 const EncryptionPanel: React.FC<EncryptionPanelProps> = ({ 
   condition,
-  onMessageKitGenerated 
+  onMessageKitGenerated,
+  onError
 }) => {
   const [message, setMessage] = useState('');
   const [isEncrypting, setIsEncrypting] = useState(false);
-  const [error, setError] = useState('');
   const [ciphertext, setCiphertext] = useState<string>('');
 
   const createCondition = (conditionData: any) => {
@@ -29,11 +30,20 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
       return chainId;
     };
 
-    switch (conditionData.conditionType) {
-      case 'time':
+    switch (conditionData.method) {
+      case 'eth_getBalance':
+        // Handle native balance check as RPC condition
+        console.log('Creating RPC condition for eth_getBalance:', conditionData);
+        return new conditions.base.rpc.RpcCondition({
+          chain: getValidChainId(conditionData.chain),
+          method: conditionData.method,
+          parameters: [':userAddress', 'latest'],
+          returnValueTest: conditionData.returnValueTest
+        });
+
+      case 'blocktime':
         // Time conditions should use blocktime method
-        console.log('Creating time condition from:', conditionData);
-        // Extract only the properties we need and ensure chain is a literal number
+        console.log('Creating time condition:', conditionData);
         const { chain, returnValueTest } = conditionData;
         const validChain = getValidChainId(chain);
         console.log('Using chain ID:', validChain, 'type:', typeof validChain);
@@ -54,10 +64,7 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
         });
         return timeCondition;
 
-      case 'contract':
-      case 'erc20':
-      case 'erc721':
-      case 'erc1155':
+      case 'balanceOf':
         // All token-related conditions use ContractCondition
         const contractCondition = new conditions.base.contract.ContractCondition({
           contractAddress: conditionData.contractAddress,
@@ -76,45 +83,12 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
         console.log('Created contract condition:', contractCondition);
         return contractCondition;
 
-      case 'rpc':
-        return new conditions.base.rpc.RpcCondition({
-          chain: getValidChainId(conditionData.chain),
-          method: conditionData.method || 'eth_getBalance',
-          parameters: conditionData.parameters || [':userAddress', 'latest'],
-          returnValueTest: {
-            comparator: conditionData.returnValueTest?.comparator || '>=',
-            value: conditionData.returnValueTest?.value || 0
-          }
-        });
-
       case 'compound':
         // Process each operand recursively
         console.log('Processing compound condition:', conditionData);
         const operands = conditionData.operands.map((operand: any) => {
           console.log('Processing operand:', operand);
-          // For time conditions, keep them as is
-          if (operand.conditionType === 'time') {
-            return {
-              conditionType: 'time',
-              chain: getValidChainId(operand.chain),
-              method: 'blocktime',
-              returnValueTest: operand.returnValueTest
-            };
-          }
-          // For ERC20 conditions, ensure we include standardContractType
-          if (operand.standardContractType === 'ERC20') {
-            return {
-              conditionType: 'contract',
-              contractAddress: operand.contractAddress,
-              standardContractType: 'ERC20',
-              chain: getValidChainId(operand.chain),
-              method: 'balanceOf',
-              parameters: [':userAddress'],
-              returnValueTest: operand.returnValueTest
-            };
-          }
-          // For other conditions, use as is
-          return operand;
+          return createCondition(operand);
         });
 
         console.log('Creating compound condition with operands:', operands);
@@ -127,13 +101,22 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
         return compoundCondition;
 
       default:
-        throw new Error(`Unsupported condition type: ${conditionData.conditionType}`);
+        if (conditionData.conditionType === 'contract') {
+          return new conditions.base.contract.ContractCondition({
+            contractAddress: conditionData.contractAddress,
+            chain: getValidChainId(conditionData.chain),
+            method: conditionData.method,
+            parameters: conditionData.parameters || [],
+            standardContractType: conditionData.standardContractType,
+            returnValueTest: conditionData.returnValueTest
+          });
+        }
+        throw new Error(`Unsupported condition type/method: ${conditionData.conditionType}/${conditionData.method}`);
     }
   };
 
   const handleEncrypt = async () => {
     if (!condition || !message) return;
-    setError('');
     setCiphertext('');
 
     try {
@@ -171,7 +154,7 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
       onMessageKitGenerated(messageKit);
     } catch (error: any) {
       console.error('Encryption error:', error);
-      setError(error.message || 'Failed to encrypt message');
+      onError(error.message || 'Failed to encrypt message');
     } finally {
       setIsEncrypting(false);
     }
@@ -180,7 +163,6 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
   const handleClear = () => {
     setMessage('');
     setCiphertext('');
-    setError('');
   };
 
   return (
@@ -228,7 +210,7 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
 
           <button
             onClick={handleClear}
-            disabled={isEncrypting || (!message && !error)}
+            disabled={isEncrypting || !message}
             className="px-4 py-3 bg-white/5 text-white rounded-lg font-medium
               border border-white/10 transition-all duration-200
               hover:bg-white/10 hover:border-white/20
@@ -244,12 +226,6 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
           </button>
         </div>
       </div>
-
-      {error && (
-        <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-lg">
-          <p className="text-sm text-red-400 font-mono">{error}</p>
-        </div>
-      )}
     </div>
   );
 };

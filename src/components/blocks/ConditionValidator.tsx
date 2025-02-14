@@ -21,7 +21,6 @@ interface ReturnValueTest {
 }
 
 interface BaseCondition {
-  conditionType: string;
   chain: number;
   returnValueTest: ReturnValueTest;
 }
@@ -39,13 +38,18 @@ interface ContractCondition extends BaseCondition {
   parameters: any[];
 }
 
+interface RpcCondition extends BaseCondition {
+  method: 'eth_getBalance';
+  parameters: [':userAddress', 'latest'];
+}
+
 interface CompoundCondition {
   conditionType: 'compound';
   operator: 'and' | 'or';
-  operands: TacoCondition[];
+  operands: (TimeCondition | ContractCondition | RpcCondition | CompoundCondition)[];
 }
 
-type TacoCondition = TimeCondition | ContractCondition | CompoundCondition;
+type TacoCondition = TimeCondition | ContractCondition | RpcCondition | CompoundCondition;
 
 interface ConditionValidatorProps {
   condition: TacoCondition;
@@ -57,7 +61,7 @@ const ConditionValidator: React.FC<ConditionValidatorProps> = ({ condition }) =>
 
     try {
       // Handle compound conditions
-      if (cond.conditionType === 'compound') {
+      if ('conditionType' in cond && cond.conditionType === 'compound') {
         if (!cond.operator || !cond.operands || !Array.isArray(cond.operands)) {
           return false;
         }
@@ -71,38 +75,51 @@ const ConditionValidator: React.FC<ConditionValidatorProps> = ({ condition }) =>
         return false;
       }
 
-      // Validate based on condition type
-      switch (cond.conditionType) {
-        case 'time': {
-          new conditions.base.time.TimeCondition({
-            chain: cond.chain,
-            method: cond.method,
-            returnValueTest: cond.returnValueTest
-          });
-          return true;
-        }
-
-        case 'contract': {
-          if (!cond.contractAddress || !cond.method) {
-            return false;
-          }
-          new conditions.base.contract.ContractCondition({
-            chain: cond.chain,
-            contractAddress: cond.contractAddress,
-            standardContractType: cond.standardContractType,
-            method: cond.method,
-            parameters: cond.parameters,
-            returnValueTest: cond.returnValueTest
-          });
-          return true;
-        }
-
-        default: {
-          const _exhaustiveCheck: never = cond;
-          console.error(`Unknown condition type: ${cond.conditionType}`);
+      // Handle eth_getBalance conditions
+      if ('method' in cond && cond.method === 'eth_getBalance') {
+        if (!Array.isArray(cond.parameters) || cond.parameters.length !== 2 ||
+            cond.parameters[0] !== ':userAddress' || cond.parameters[1] !== 'latest') {
           return false;
         }
+        new conditions.base.rpc.RpcCondition({
+          chain: cond.chain,
+          method: cond.method,
+          parameters: cond.parameters as [string, string],
+          returnValueTest: cond.returnValueTest
+        });
+        return true;
       }
+
+      // Validate based on condition type
+      if ('conditionType' in cond) {
+        switch (cond.conditionType) {
+          case 'time': {
+            new conditions.base.time.TimeCondition({
+              chain: cond.chain,
+              method: cond.method,
+              returnValueTest: cond.returnValueTest
+            });
+            return true;
+          }
+
+          case 'contract': {
+            if (!cond.contractAddress || !cond.method) {
+              return false;
+            }
+            new conditions.base.contract.ContractCondition({
+              chain: cond.chain,
+              contractAddress: cond.contractAddress,
+              standardContractType: cond.standardContractType,
+              method: cond.method,
+              parameters: cond.parameters,
+              returnValueTest: cond.returnValueTest
+            });
+            return true;
+          }
+        }
+      }
+
+      return false;
     } catch (error) {
       console.error('Validation error:', error);
       return false;

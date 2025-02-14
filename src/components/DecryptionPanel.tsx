@@ -1,20 +1,35 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { conditions, decrypt, domains } from '@nucypher/taco';
-import { EIP4361AuthProvider } from '@nucypher/taco-auth';
+import { conditions, decrypt, domains, initialize } from '@nucypher/taco';
+import { EIP4361AuthProvider, USER_ADDRESS_PARAM_DEFAULT } from '@nucypher/taco-auth';
 import { ethers } from 'ethers';
 
 interface DecryptionPanelProps {
   messageKit: any;
+  onError: (error: string) => void;
 }
 
-const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit }) => {
+const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit, onError }) => {
   const [decryptedMessage, setDecryptedMessage] = useState('');
   const [isDecrypting, setIsDecrypting] = useState(false);
-  const [error, setError] = useState('');
   const [customCiphertext, setCustomCiphertext] = useState('');
   const [activeMessageKit, setActiveMessageKit] = useState<any>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize TACo when component mounts
+  useEffect(() => {
+    const initTaco = async () => {
+      try {
+        await initialize();
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Failed to initialize TACo:', error);
+        onError('Failed to initialize encryption library');
+      }
+    };
+    initTaco();
+  }, [onError]);
 
   // Update active message kit when prop changes
   useEffect(() => {
@@ -22,7 +37,6 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit }) => {
       const messageKitString = btoa(JSON.stringify(messageKit));
       setCustomCiphertext(messageKitString);
       setActiveMessageKit(messageKit);
-      setError('');
     }
   }, [messageKit]);
 
@@ -31,16 +45,14 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit }) => {
     try {
       if (text.trim() === '') {
         setActiveMessageKit(null);
-        setError('');
         return;
       }
       // Try to parse the input as a messageKit
       const parsedMessageKit = JSON.parse(atob(text));
       setActiveMessageKit(parsedMessageKit);
-      setError('');
     } catch (e) {
       setActiveMessageKit(null);
-      setError('Invalid ciphertext format. Please provide a valid base64-encoded messageKit.');
+      onError('Invalid ciphertext format. Please provide a valid base64-encoded messageKit.');
     }
   };
 
@@ -48,12 +60,10 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit }) => {
     setCustomCiphertext('');
     setActiveMessageKit(null);
     setDecryptedMessage('');
-    setError('');
   };
 
   const handleDecrypt = async () => {
-    if (!activeMessageKit) return;
-    setError('');
+    if (!activeMessageKit || !isInitialized) return;
     setDecryptedMessage('');
 
     try {
@@ -87,8 +97,8 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit }) => {
         }
       );
 
-      // Add auth provider for contract condition parameters BEFORE getting parameters
-      conditionContext.addAuthProvider(':userAddress', authProvider);
+      // Add auth provider for :userAddress parameter
+      conditionContext.addAuthProvider(USER_ADDRESS_PARAM_DEFAULT, authProvider);
 
       // Now get the parameters after setting up auth
       const contextParams = await conditionContext.toContextParameters();
@@ -111,7 +121,7 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit }) => {
       setDecryptedMessage(new TextDecoder().decode(decrypted));
     } catch (error: any) {
       console.error('Decryption error:', error);
-      setError(error.message || 'Failed to decrypt message');
+      onError(error.message || 'Failed to decrypt message');
     } finally {
       setIsDecrypting(false);
     }
@@ -180,7 +190,7 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit }) => {
 
         <button
           onClick={handleDecrypt}
-          disabled={!activeMessageKit || isDecrypting}
+          disabled={!activeMessageKit || isDecrypting || !isInitialized}
           className="w-full px-4 py-3 bg-white/5 text-white rounded-lg font-medium
             border border-white/10 transition-all duration-200
             hover:bg-white/10 hover:border-white/20
@@ -209,12 +219,6 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit }) => {
           </div>
         )}
       </div>
-
-      {error && (
-        <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-lg">
-          <p className="text-sm text-red-400 font-mono">{error}</p>
-        </div>
-      )}
     </div>
   );
 };

@@ -78,7 +78,7 @@ export const blocksToJson = (blocks: Block[]): any => {
           const balance = parseFloat(value);
           if (!isNaN(balance)) {
             condition.returnValueTest = {
-              comparator: '>',
+              comparator: condition.method === 'eth_getBalance' ? '>=' : '>',
               value: balance
             };
           }
@@ -126,13 +126,10 @@ export const blocksToJson = (blocks: Block[]): any => {
       }
     });
 
-    // For timestamp blocks, ensure chain is set to 1 only if no chain input was provided
-    if (condition.standardContractType === 'timestamp') {
-      const chainInput = block.inputs?.find(input => input.id === 'chain');
-      const chainValue = chainInput?.value || chainInput?.connected?.value;
-      if (!chainValue && chainValue !== '0') {
-        condition.chain = 1;
-      }
+    // For eth_getBalance conditions, ensure we're using the RPC condition type
+    if (condition.method === 'eth_getBalance') {
+      condition.conditionType = 'rpc';
+      condition.parameters = [':userAddress', 'latest'];
     }
 
     return condition;

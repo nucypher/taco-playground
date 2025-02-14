@@ -9,11 +9,13 @@ import BlockWorkspace from './blocks/BlockWorkspace';
 import JsonPreview from './blocks/JsonPreview';
 import EncryptionPanel from './EncryptionPanel';
 import DecryptionPanel from './DecryptionPanel';
+import ErrorPanel from './ErrorPanel';
 import TacoProvider from './TacoProvider';
 
 const TacoPlayground: React.FC = () => {
   const [currentCondition, setCurrentCondition] = useState<any>(null);
   const [messageKit, setMessageKit] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('TacoPlayground currentCondition updated:', currentCondition);
@@ -22,6 +24,16 @@ const TacoPlayground: React.FC = () => {
   const handleConditionChange = (condition: any) => {
     console.log('TacoPlayground handleConditionChange called with:', condition);
     setCurrentCondition(condition);
+  };
+
+  const handleError = (error: string) => {
+    setError(error);
+    // Automatically clear error after 10 seconds
+    setTimeout(() => setError(null), 10000);
+  };
+
+  const handleClearError = () => {
+    setError(null);
   };
 
   return (
@@ -43,13 +55,18 @@ const TacoPlayground: React.FC = () => {
                 <EncryptionPanel
                   condition={currentCondition}
                   onMessageKitGenerated={setMessageKit}
+                  onError={handleError}
                 />
               </div>
               <div className="bg-black rounded-lg">
-                <DecryptionPanel messageKit={messageKit} />
+                <DecryptionPanel 
+                  messageKit={messageKit}
+                  onError={handleError}
+                />
               </div>
             </div>
           </div>
+          <ErrorPanel error={error} onClear={handleClearError} />
         </MainLayout>
       </TacoProvider>
     </DndProvider>

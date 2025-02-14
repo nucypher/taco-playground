@@ -139,7 +139,7 @@ export const AVAILABLE_BLOCKS: Block[] = [
       { id: 'minBalance', type: ['value'], label: 'Min Balance (Wei)', inputType: 'number' },
     ],
     properties: {
-      conditionType: 'contract',
+      conditionType: 'rpc',
       method: 'eth_getBalance',
       parameters: [':userAddress', 'latest'],
     }

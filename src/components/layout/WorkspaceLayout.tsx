@@ -12,11 +12,11 @@ const WorkspaceLayout: React.FC<WorkspaceLayoutProps> = ({
   preview 
 }) => {
   return (
-    <div className="grid grid-cols-12 gap-4 h-[600px]">
-      <div className="col-span-8 bg-gray-900 rounded-lg shadow-lg border border-gray-700 overflow-hidden">
+    <div className="grid grid-cols-12 gap-4 min-h-[600px]">
+      <div className="col-span-8 bg-black rounded-lg border border-white/10 overflow-hidden flex flex-col">
         {workspace}
       </div>
-      <div className="col-span-4 bg-gray-900 rounded-lg shadow-lg border border-gray-700 overflow-hidden">
+      <div className="col-span-4 bg-black rounded-lg border border-white/10 overflow-hidden">
         {preview}
       </div>
     </div>

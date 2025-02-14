@@ -2,7 +2,7 @@
 
 import React, { useRef, useCallback } from 'react';
 import { useDrag } from 'react-dnd';
-import { Block, BlockInput } from './BlockTypes';
+import { Block, BlockInput, BlockType } from './BlockTypes';
 import { DropTarget } from './DropTarget';
 
 interface DraggableBlockProps {
@@ -197,21 +197,30 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
   const renderConnectedBlock = (connectedBlock: Block, parentInputId: string) => {
     if (connectedBlock.type === 'condition') {
       return (
-        <div className="mt-2 bg-purple-700/50 rounded p-2 border border-purple-500/30">
-          <div className="font-medium text-sm">{connectedBlock.label}</div>
+        <div className="mt-2 bg-black border border-white/10 rounded-lg p-3
+          transition-all duration-200 hover:border-white/20">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-purple-400" />
+            <div className="font-medium text-sm">{connectedBlock.label}</div>
+          </div>
           {connectedBlock.inputs && connectedBlock.inputs.length > 0 && (
-            <div className="mt-2 space-y-2">
+            <div className="mt-3 space-y-3">
               {connectedBlock.inputs.map((input) => (
-                <div key={input.id} className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-300">{input.label}:</label>
+                <div key={input.id} className="space-y-1.5">
+                  <label className="text-xs text-white/60 font-medium">
+                    {input.label}
+                  </label>
                   <input
                     type={input.inputType || 'text'}
-                    className="w-full px-2 py-1 text-sm bg-gray-800 rounded border border-gray-600 text-white
-                      transition-colors duration-200
-                      focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm bg-white/5 rounded-lg
+                      border border-white/10 text-white placeholder-white/30
+                      transition-all duration-200
+                      focus:border-white/30 focus:ring-1 focus:ring-white/20
+                      hover:border-white/20"
                     value={input.value || ''}
                     onChange={(e) => handleValueChange(input.id, e, parentInputId)}
                     onClick={(e) => e.stopPropagation()}
+                    placeholder={input.placeholder || `Enter ${input.label.toLowerCase()}...`}
                   />
                 </div>
               ))}
@@ -221,7 +230,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
       );
     }
     return (
-      <div className="text-sm text-gray-300">
+      <div className="text-sm text-white/80">
         {connectedBlock.label}
       </div>
     );

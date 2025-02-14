@@ -12,7 +12,16 @@ interface BlockWorkspaceProps {
 
 const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) => {
   const [blocks, setBlocks] = useState<Block[]>([]);
+  const [dropError, setDropError] = useState<string>('');
   const prevJsonRef = useRef<string>('');
+
+  // Clear error message after a delay
+  useEffect(() => {
+    if (dropError) {
+      const timer = setTimeout(() => setDropError(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [dropError]);
 
   // Generate JSON whenever blocks change
   useEffect(() => {
@@ -52,15 +61,45 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
 
   const handleClear = () => {
     setBlocks([]);
+    setDropError('');
     prevJsonRef.current = '';
     onConditionChange(null);
+  };
+
+  // Helper function to check if a block is connected to an operator
+  const isBlockConnectedToOperator = (blockId: string): boolean => {
+    return blocks.some(block => 
+      block.type === 'operator' && 
+      block.inputs?.some(input => input.connected?.id === blockId)
+    );
+  };
+
+  // Helper function to count standalone condition blocks
+  const getStandaloneConditionCount = (): number => {
+    return blocks.filter(block => 
+      block.type === 'condition' && !isBlockConnectedToOperator(block.id)
+    ).length;
   };
 
   const [{ isOver, canDrop }, drop] = useDrop(() => ({
     accept: 'block',
     canDrop: (item: any) => {
-      // Allow both condition and operator blocks in the workspace
-      return (item.type === 'condition' || item.type === 'operator') && item.isTemplate;
+      // Always allow operator blocks
+      if (item.type === 'operator' && item.isTemplate) {
+        return true;
+      }
+
+      // For condition blocks, only allow if there are no standalone conditions
+      if (item.type === 'condition' && item.isTemplate) {
+        const standaloneConditions = getStandaloneConditionCount();
+        if (standaloneConditions > 0) {
+          setDropError('Use an operator block (AND/OR) to combine multiple conditions');
+          return false;
+        }
+        return true;
+      }
+
+      return false;
     },
     drop: (item: any, monitor) => {
       if (monitor.canDrop() && item.isTemplate) {
@@ -86,13 +125,13 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
       isOver: monitor.isOver(),
       canDrop: monitor.canDrop(),
     }),
-  }), []);
+  }), [blocks]);
 
   const elementRef = useRef<HTMLDivElement>(null);
   drop(elementRef);
 
   return (
-    <div className="space-y-3 bg-black border border-white/10 rounded-lg p-6">
+    <div className="space-y-3 bg-black border border-white/10 rounded-lg p-6 flex flex-col flex-1">
       <div className="flex justify-between items-center border-b border-white/10 pb-4">
         <h3 className="text-sm font-medium text-white tracking-wide uppercase">
           Workspace
@@ -119,8 +158,8 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
       <div
         ref={elementRef}
         className={`
-          min-h-[400px] p-4 rounded-lg overflow-y-auto
-          bg-black/50 border transition-all duration-200
+          flex-1 min-h-[400px] p-4 rounded-lg overflow-y-auto
+          bg-black border transition-all duration-200
           scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-white/10
           hover:scrollbar-thumb-white/20
           [&::-webkit-scrollbar]:w-2
@@ -136,7 +175,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
           ${!isOver && canDrop ? 'border-white/20 border-dashed' : ''}
         `}
       >
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-full">
           {blocks.map((block) => (
             <DraggableBlock
               key={block.id}
@@ -152,6 +191,20 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
           )}
         </div>
       </div>
+
+      {/* Error Message */}
+      {dropError && (
+        <div className="mt-3 p-3 bg-red-500/5 border border-red-500/20 rounded-lg
+          text-red-400 text-sm font-medium animate-fade-in">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{dropError}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

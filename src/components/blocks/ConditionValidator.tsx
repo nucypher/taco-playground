@@ -11,34 +11,107 @@ const SUPPORTED_CHAINS = [
   { id: 1, name: 'Ethereum Mainnet' }
 ] as const;
 
+type Comparator = '==' | '>' | '<' | '>=' | '<=' | '!=';
+type StandardContractType = 'ERC20' | 'ERC721';
+
+interface ReturnValueTest {
+  comparator: Comparator;
+  value: any;
+  index?: number;
+}
+
+interface BaseCondition {
+  conditionType: string;
+  chain: number;
+  returnValueTest: ReturnValueTest;
+}
+
+interface TimeCondition extends BaseCondition {
+  conditionType: 'time';
+  method: 'blocktime';
+}
+
+interface ContractCondition extends BaseCondition {
+  conditionType: 'contract';
+  contractAddress: string;
+  standardContractType?: StandardContractType;
+  method: string;
+  parameters: any[];
+}
+
+interface CompoundCondition {
+  conditionType: 'compound';
+  operator: 'and' | 'or';
+  operands: TacoCondition[];
+}
+
+type TacoCondition = TimeCondition | ContractCondition | CompoundCondition;
+
 interface ConditionValidatorProps {
-  condition: any;
+  condition: TacoCondition;
 }
 
 const ConditionValidator: React.FC<ConditionValidatorProps> = ({ condition }) => {
-  const isValid = React.useMemo(() => {
-    if (!condition) return false;
-    
+  const validateCondition = (cond: TacoCondition): boolean => {
+    if (!cond) return false;
+
     try {
-      console.log('Validating condition:', condition);
+      // Handle compound conditions
+      if (cond.conditionType === 'compound') {
+        if (!cond.operator || !cond.operands || !Array.isArray(cond.operands)) {
+          return false;
+        }
+        // Validate each operand recursively
+        return cond.operands.every(operand => validateCondition(operand));
+      }
+
+      // Validate chain ID for all non-compound conditions
+      if ('chain' in cond && !SUPPORTED_CHAINS.some(chain => chain.id === cond.chain)) {
+        console.error(`Unsupported chain ID: ${cond.chain}`);
+        return false;
+      }
+
       // Validate based on condition type
-      if (condition.chain !== undefined) { // TimeCondition
-        // Verify chain ID is supported
-        if (!SUPPORTED_CHAINS.some(chain => chain.id === condition.chain)) {
-          throw new Error(`Unsupported chain ID: ${condition.chain}`);
+      switch (cond.conditionType) {
+        case 'time': {
+          new conditions.base.time.TimeCondition({
+            chain: cond.chain,
+            method: cond.method,
+            returnValueTest: cond.returnValueTest
+          });
+          return true;
         }
 
-        new conditions.base.time.TimeCondition({
-          chain: condition.chain,
-          returnValueTest: condition.returnValueTest
-        });
-        return true;
+        case 'contract': {
+          if (!cond.contractAddress || !cond.method) {
+            return false;
+          }
+          new conditions.base.contract.ContractCondition({
+            chain: cond.chain,
+            contractAddress: cond.contractAddress,
+            standardContractType: cond.standardContractType,
+            method: cond.method,
+            parameters: cond.parameters,
+            returnValueTest: cond.returnValueTest
+          });
+          return true;
+        }
+
+        default: {
+          const _exhaustiveCheck: never = cond;
+          console.error(`Unknown condition type: ${cond.conditionType}`);
+          return false;
+        }
       }
-      return false;
     } catch (error) {
       console.error('Validation error:', error);
       return false;
     }
+  };
+
+  const isValid = React.useMemo(() => {
+    console.log('Validating condition:', condition);
+    return validateCondition(condition);
   }, [condition]);
 
   return (

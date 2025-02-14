@@ -55,8 +55,8 @@ const CategorySection: React.FC<CategorySectionProps> = ({
 const BlockSidebar: React.FC = () => {
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
     [BLOCK_CATEGORIES.CONDITIONS]: true,
-    [BLOCK_CATEGORIES.VALUES]: true,
     [BLOCK_CATEGORIES.OPERATORS]: true,
+    [BLOCK_CATEGORIES.VALUES]: true,
   });
 
   const toggleCategory = (category: string) => {

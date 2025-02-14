@@ -2,8 +2,9 @@
 
 import React, { useRef, useCallback } from 'react';
 import { useDrag } from 'react-dnd';
-import { Block, BlockInput, BlockType } from './BlockTypes';
+import { Block, BlockInput } from './BlockTypes';
 import { DropTarget } from './DropTarget';
+import { DragItem, DragRef } from './types';
 
 interface DraggableBlockProps {
   block: Block;
@@ -18,7 +19,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
 }) => {
   const elementRef = useRef<HTMLDivElement>(null);
 
-  const handleDrop = useCallback((inputId: string, item: any, parentInputId?: string) => {
+  const handleDrop = useCallback((inputId: string, item: DragItem, parentInputId?: string) => {
     if (!onBlockUpdate) return;
 
     const updatedBlock = JSON.parse(JSON.stringify(block));
@@ -40,7 +41,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
     } else if (block.type === 'operator') {
       const input = updatedBlock.inputs?.find((input: BlockInput) => input.id === inputId);
       if (input && !input.connected) {
-        const droppedBlock = JSON.parse(JSON.stringify(item));
+        const droppedBlock = JSON.parse(JSON.stringify(item)) as Block;
         droppedBlock.isTemplate = false;
 
         // Initialize values for all inputs in the dropped condition
@@ -74,7 +75,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
     type: 'block',
     item: () => {
       const newId = isWorkspaceBlock ? block.id : `${block.id}-${Date.now()}`;
-      const newBlock = JSON.parse(JSON.stringify({
+      const newBlock: DragItem = {
         id: newId,
         type: block.type,
         category: block.category,
@@ -82,7 +83,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
         inputs: block.inputs,
         properties: block.properties,
         isTemplate: !isWorkspaceBlock,
-      }));
+      };
       return newBlock;
     },
     collect: (monitor) => ({
@@ -91,13 +92,13 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
   }), [block, isWorkspaceBlock]);
 
   // Combine refs utility
-  const combineRefs = useCallback((...refs: any[]) => {
-    return (element: HTMLDivElement) => {
+  const combineRefs = useCallback((...refs: DragRef[]) => {
+    return (element: HTMLDivElement | null) => {
       refs.forEach((ref) => {
         if (typeof ref === 'function') {
           ref(element);
-        } else if (ref) {
-          (ref as React.MutableRefObject<any>).current = element;
+        } else if (ref && 'current' in ref) {
+          ref.current = element;
         }
       });
     };

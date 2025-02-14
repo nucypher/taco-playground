@@ -14,7 +14,7 @@ export type ConditionType =
   | 'specific_wallet_address'
   | 'timestamp';
 
-export type BlockCategory = 'conditions' | 'operators';
+export type BlockCategory = 'conditions' | 'operators' | 'values';
 
 export interface Block {
   id: string;
@@ -22,10 +22,11 @@ export interface Block {
   category?: string;
   label: string;
   inputs?: BlockInput[];
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   isTemplate?: boolean;
   value?: string;
   inputType?: string;
+  placeholder?: string;
 }
 
 export interface BlockInput {
@@ -38,37 +39,8 @@ export interface BlockInput {
   placeholder?: string;
 }
 
-export interface TacoCondition {
-  conditionType: string;
-  contractAddress: string;
-  standardContractType?: string;
-  chain: number;
-  method: string;
-  parameters: any[];
-  functionAbi?: {
-    inputs: {
-      internalType: string;
-      name: string;
-      type: string;
-    }[];
-    name: string;
-    outputs: {
-      internalType: string;
-      name: string;
-      type: string;
-    }[];
-    stateMutability: string;
-    type: string;
-    constant?: boolean;
-  };
-  returnValueTest: {
-    comparator: string;
-    value: any;
-    index?: number;
-  };
-}
-
 export const BLOCK_CATEGORIES = {
   CONDITIONS: 'conditions',
-  OPERATORS: 'operators'
+  OPERATORS: 'operators',
+  VALUES: 'values'
 } as const; 

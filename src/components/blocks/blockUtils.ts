@@ -1,18 +1,16 @@
 import { Block } from './BlockTypes';
+import { TacoCondition, TimeCondition, ContractCondition, RpcCondition, CompoundCondition, ChainId, ReturnValueTest } from '../../types/taco';
 
-interface JsonCondition {
-  operator?: 'and' | 'or' | 'not';
-  conditionType?: string;
-  operands?: JsonCondition[];
-  returnValueTest?: {
-    comparator: string;
-    value: string | number;
-  };
-  chain?: number;
+type ProcessedCondition = TimeCondition | ContractCondition | RpcCondition | CompoundCondition;
+
+interface ConditionBuilder {
+  conditionType?: 'time' | 'contract' | 'rpc' | 'compound';
+  chain?: ChainId;
   contractAddress?: string;
-  standardContractType?: string;
   method?: string;
-  parameters?: any[];
+  parameters?: unknown[];
+  standardContractType?: 'ERC20' | 'ERC721' | 'ERC1155';
+  returnValueTest?: ReturnValueTest;
   functionAbi?: {
     name: string;
     inputs: { type: string }[];
@@ -20,16 +18,15 @@ interface JsonCondition {
   };
 }
 
-export const blocksToJson = (blocks: Block[]): any => {
-  const processBlock = (block: Block): JsonCondition | null => {
+const isValidChainId = (chainId: number): chainId is ChainId => {
+  return [1, 137, 80002, 11155111].includes(chainId);
+};
+
+export const blocksToJson = (blocks: Block[]): TacoCondition | null => {
+  const processBlock = (block: Block): ProcessedCondition | null => {
     if (!block || !block.properties) {
       return null;
     }
-
-    // Start with the properties
-    const condition: JsonCondition = {
-      ...block.properties
-    };
 
     // Handle operator blocks differently
     if (block.type === 'operator') {
@@ -40,19 +37,23 @@ export const blocksToJson = (blocks: Block[]): any => {
         .filter((block): block is Block => block !== undefined) || [];
 
       // Process each connected condition
-      condition.operands = connectedConditions
+      const operands = connectedConditions
         .map(connectedBlock => processBlock(connectedBlock))
-        .filter((condition): condition is JsonCondition => condition !== null);
+        .filter((condition): condition is ProcessedCondition => condition !== null);
 
-      // Remove any left/right properties that might exist
-      const anyCondition = condition as any;
-      delete anyCondition.left;
-      delete anyCondition.right;
+      // Create compound condition
+      const compoundCondition: CompoundCondition = {
+        conditionType: 'compound',
+        operator: (block.properties.operator as 'and' | 'or') || 'and',
+        operands
+      };
 
-      return condition;
+      return compoundCondition;
     }
 
-    // Process inputs for condition blocks
+    // Process condition blocks
+    const builder: ConditionBuilder = {};
+
     block.inputs?.forEach(input => {
       // Check for direct value first, then fall back to connected value
       const value = input.value || input.connected?.value;
@@ -62,23 +63,19 @@ export const blocksToJson = (blocks: Block[]): any => {
 
       switch (input.id) {
         case 'contractAddress':
-          condition.contractAddress = value.trim();
+          builder.contractAddress = value.trim();
           break;
         case 'chain':
           const chainId = parseInt(value);
-          if (!isNaN(chainId) && [1, 137, 80002, 11155111].includes(chainId)) {
-            // Ensure chain is a literal number
-            condition.chain = Number(chainId);
-          } else {
-            // If the chain ID is not valid, remove it from the condition
-            delete condition.chain;
+          if (!isNaN(chainId) && isValidChainId(chainId)) {
+            builder.chain = chainId;
           }
           break;
         case 'minBalance':
           const balance = parseFloat(value);
           if (!isNaN(balance)) {
-            condition.returnValueTest = {
-              comparator: condition.method === 'eth_getBalance' ? '>=' : '>',
+            builder.returnValueTest = {
+              comparator: block.properties?.method === 'eth_getBalance' ? '>=' : '>',
               value: balance
             };
           }
@@ -87,38 +84,35 @@ export const blocksToJson = (blocks: Block[]): any => {
         case 'minTimestamp':
           const timestamp = parseInt(value);
           if (!isNaN(timestamp)) {
-            // Clear out any unwanted properties
-            delete condition.parameters;
-            condition.conditionType = 'time';
-            condition.method = 'blocktime';
-            condition.returnValueTest = {
+            builder.conditionType = 'time';
+            builder.method = 'blocktime';
+            builder.returnValueTest = {
               comparator: '>=',
               value: timestamp
             };
           }
           break;
         case 'tokenId':
-          if (condition.parameters) {
-            condition.parameters = condition.parameters.map(p => 
-              p === ':tokenId' ? value : p
-            );
-          } else {
-            condition.parameters = [value];
+          if (!builder.parameters) {
+            builder.parameters = [];
           }
+          builder.parameters = builder.parameters.map((p: unknown) => 
+            p === ':tokenId' ? value : p
+          );
           break;
         case 'method':
-          condition.method = value;
+          builder.method = value;
           break;
         case 'parameters':
           try {
-            condition.parameters = JSON.parse(value);
+            builder.parameters = JSON.parse(value);
           } catch (e) {
             console.error('Failed to parse parameters:', e);
           }
           break;
         case 'functionAbi':
           try {
-            condition.functionAbi = JSON.parse(value);
+            builder.functionAbi = JSON.parse(value);
           } catch (e) {
             console.error('Failed to parse function ABI:', e);
           }
@@ -127,12 +121,52 @@ export const blocksToJson = (blocks: Block[]): any => {
     });
 
     // For eth_getBalance conditions, ensure we're using the RPC condition type
-    if (condition.method === 'eth_getBalance') {
-      condition.conditionType = 'rpc';
-      condition.parameters = [':userAddress', 'latest'];
+    if (block.properties?.method === 'eth_getBalance' && builder.chain) {
+      const rpcCondition: RpcCondition = {
+        conditionType: 'rpc',
+        chain: builder.chain,
+        method: 'eth_getBalance',
+        parameters: [':userAddress', 'latest'],
+        returnValueTest: builder.returnValueTest || {
+          comparator: '>=',
+          value: 0
+        }
+      };
+      return rpcCondition;
     }
 
-    return condition;
+    // For contract conditions
+    if (block.properties?.conditionType === 'contract' && builder.chain && builder.method) {
+      const contractCondition: ContractCondition = {
+        conditionType: 'contract',
+        chain: builder.chain,
+        contractAddress: builder.contractAddress || '',
+        method: builder.method,
+        parameters: builder.parameters || [],
+        standardContractType: block.properties.standardContractType as 'ERC20' | 'ERC721' | 'ERC1155' | undefined,
+        returnValueTest: builder.returnValueTest || {
+          comparator: '>',
+          value: 0
+        }
+      };
+      return contractCondition;
+    }
+
+    // For time conditions
+    if (builder.conditionType === 'time' && builder.chain) {
+      const timeCondition: TimeCondition = {
+        conditionType: 'time',
+        chain: builder.chain,
+        method: 'blocktime',
+        returnValueTest: builder.returnValueTest || {
+          comparator: '>=',
+          value: 0
+        }
+      };
+      return timeCondition;
+    }
+
+    return null;
   };
 
   // Process only top-level blocks
@@ -145,13 +179,13 @@ export const blocksToJson = (blocks: Block[]): any => {
 
   if (topLevelBlocks.length === 0) return null;
   if (topLevelBlocks.length === 1) {
-    return processBlock(topLevelBlocks[0]) || null;
+    return processBlock(topLevelBlocks[0]);
   }
 
   // If multiple top-level blocks, combine them with AND
   const conditions = topLevelBlocks
     .map(block => processBlock(block))
-    .filter(condition => condition !== null);
+    .filter((condition): condition is ProcessedCondition => condition !== null);
 
   if (conditions.length === 0) return null;
   if (conditions.length === 1) return conditions[0];
@@ -163,7 +197,7 @@ export const blocksToJson = (blocks: Block[]): any => {
   };
 };
 
-export const formatJson = (json: any): string => {
+export const formatJson = (json: TacoCondition | null): string => {
   if (!json) return '';
   return JSON.stringify(json, null, 2);
 }; 

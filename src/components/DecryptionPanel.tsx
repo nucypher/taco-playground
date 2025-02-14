@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { conditions, decrypt, domains, initialize } from '@nucypher/taco';
+import { conditions, decrypt, domains, initialize, ThresholdMessageKit } from '@nucypher/taco';
 import { EIP4361AuthProvider, USER_ADDRESS_PARAM_DEFAULT } from '@nucypher/taco-auth';
 import { ethers } from 'ethers';
 
 interface DecryptionPanelProps {
-  messageKit: any;
+  messageKit: ThresholdMessageKit | null;
   onError: (error: string) => void;
 }
 
@@ -14,7 +14,7 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit, onError }
   const [decryptedMessage, setDecryptedMessage] = useState('');
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [customCiphertext, setCustomCiphertext] = useState('');
-  const [activeMessageKit, setActiveMessageKit] = useState<any>(null);
+  const [activeMessageKit, setActiveMessageKit] = useState<ThresholdMessageKit | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize TACo when component mounts
@@ -48,9 +48,9 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit, onError }
         return;
       }
       // Try to parse the input as a messageKit
-      const parsedMessageKit = JSON.parse(atob(text));
+      const parsedMessageKit = JSON.parse(atob(text)) as ThresholdMessageKit;
       setActiveMessageKit(parsedMessageKit);
-    } catch (e) {
+    } catch {
       setActiveMessageKit(null);
       onError('Invalid ciphertext format. Please provide a valid base64-encoded messageKit.');
     }
@@ -119,9 +119,9 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ messageKit, onError }
       );
 
       setDecryptedMessage(new TextDecoder().decode(decrypted));
-    } catch (error: any) {
+    } catch (error) {
       console.error('Decryption error:', error);
-      onError(error.message || 'Failed to decrypt message');
+      onError(error instanceof Error ? error.message : 'Failed to decrypt message');
     } finally {
       setIsDecrypting(false);
     }

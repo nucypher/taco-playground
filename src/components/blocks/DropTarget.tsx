@@ -1,12 +1,12 @@
 import React, { useCallback } from 'react';
 import { useDrop } from 'react-dnd';
-import { Block } from './BlockTypes';
+import { DragItem } from './types';
 
 interface DropTargetProps {
   inputId: string;
   parentInputId?: string;
   isWorkspaceBlock: boolean;
-  onDrop: (inputId: string, item: any, parentInputId?: string) => void;
+  onDrop: (inputId: string, item: DragItem, parentInputId?: string) => void;
   children: React.ReactNode;
   className?: string;
 }
@@ -19,13 +19,13 @@ export const DropTarget: React.FC<DropTargetProps> = ({
   children,
   className = '',
 }) => {
-  const [{ isOver, canDrop }, dropRef] = useDrop<any, void, { isOver: boolean; canDrop: boolean }>(() => ({
+  const [{ isOver, canDrop }, dropRef] = useDrop<DragItem, void, { isOver: boolean; canDrop: boolean }>(() => ({
     accept: 'block',
-    canDrop: (item: any) => {
+    canDrop: (item: DragItem) => {
       if (!isWorkspaceBlock) return false;
       return item.type === 'condition' || item.type === 'operator';
     },
-    drop: (item: any) => {
+    drop: (item: DragItem) => {
       onDrop(inputId, item, parentInputId);
       return undefined;
     },

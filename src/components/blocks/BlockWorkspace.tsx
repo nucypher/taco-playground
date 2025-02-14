@@ -3,11 +3,17 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useDrop } from 'react-dnd';
 import { Block } from './BlockTypes';
+import { TacoCondition } from '../../types/taco';
 import DraggableBlock from './DraggableBlock';
 import { blocksToJson } from './blockUtils';
 
 interface BlockWorkspaceProps {
-  onConditionChange: (condition: any) => void;
+  onConditionChange: (condition: TacoCondition | null) => void;
+}
+
+interface DragItem extends Omit<Block, 'id'> {
+  id: string;
+  isTemplate: boolean;
 }
 
 const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) => {
@@ -83,7 +89,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
 
   const [{ isOver, canDrop }, drop] = useDrop(() => ({
     accept: 'block',
-    canDrop: (item: any) => {
+    canDrop: (item: DragItem) => {
       // Always allow operator blocks
       if (item.type === 'operator' && item.isTemplate) {
         return true;
@@ -101,7 +107,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
 
       return false;
     },
-    drop: (item: any, monitor) => {
+    drop: (item: DragItem, monitor) => {
       if (monitor.canDrop() && item.isTemplate) {
         setBlocks(prev => {
           // Create a deep copy of the block to ensure properties are preserved

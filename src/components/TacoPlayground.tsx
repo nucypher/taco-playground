@@ -11,17 +11,19 @@ import EncryptionPanel from './EncryptionPanel';
 import DecryptionPanel from './DecryptionPanel';
 import ErrorPanel from './ErrorPanel';
 import TacoProvider from './TacoProvider';
+import { TacoCondition } from '../types/taco';
+import { ThresholdMessageKit } from '@nucypher/taco';
 
 const TacoPlayground: React.FC = () => {
-  const [currentCondition, setCurrentCondition] = useState<any>(null);
-  const [messageKit, setMessageKit] = useState<any>(null);
+  const [currentCondition, setCurrentCondition] = useState<TacoCondition | null>(null);
+  const [messageKit, setMessageKit] = useState<ThresholdMessageKit | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('TacoPlayground currentCondition updated:', currentCondition);
   }, [currentCondition]);
 
-  const handleConditionChange = (condition: any) => {
+  const handleConditionChange = (condition: TacoCondition | null) => {
     console.log('TacoPlayground handleConditionChange called with:', condition);
     setCurrentCondition(condition);
   };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ethers } from 'ethers';
 
 const POLYGON_AMOY_CHAIN_ID = '0x1389'; // 5001 in decimal
@@ -20,6 +20,11 @@ const NetworkCheck: React.FC = () => {
   const [isWrongNetwork, setIsWrongNetwork] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  const handleChainChanged = useCallback((args: unknown[]) => {
+    const chainId = Array.isArray(args) && args[0] ? args[0].toString() : '';
+    setIsWrongNetwork(parseInt(chainId, 16) !== 5001);
+  }, []);
+
   useEffect(() => {
     const checkNetwork = async () => {
       if (!window.ethereum) {
@@ -34,9 +39,7 @@ const NetworkCheck: React.FC = () => {
         setIsLoading(false);
 
         // Listen for network changes
-        window.ethereum.on('chainChanged', (chainId: string) => {
-          setIsWrongNetwork(parseInt(chainId, 16) !== 5001);
-        });
+        window.ethereum.on('chainChanged', handleChainChanged);
       } catch (error) {
         console.error('Error checking network:', error);
         setIsLoading(false);
@@ -48,10 +51,10 @@ const NetworkCheck: React.FC = () => {
     // Cleanup listener
     return () => {
       if (window.ethereum?.removeListener) {
-        window.ethereum.removeListener('chainChanged', () => {});
+        window.ethereum.removeListener('chainChanged', handleChainChanged);
       }
     };
-  }, []);
+  }, [handleChainChanged]);
 
   const switchNetwork = async () => {
     if (!window.ethereum) return;

@@ -5,9 +5,10 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import BlockPalette from './blocks/BlockPalette';
 import BlockWorkspace from './blocks/BlockWorkspace';
+import { TacoCondition } from '../types/taco';
 
 interface ConditionBuilderProps {
-  onConditionChange: (condition: any) => void;
+  onConditionChange: (condition: TacoCondition | null) => void;
 }
 
 const ConditionBuilder: React.FC<ConditionBuilderProps> = ({ onConditionChange }) => {

@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TACo Playground
 
-## Getting Started
+A visual interface for building and testing Threshold Access Control conditions.
 
-First, run the development server:
+## Features
+
+- Visual block-based condition builder
+- Live JSON preview
+- Encryption and decryption testing
+- Support for multiple condition types:
+  - Time-based conditions
+  - ERC20 token balance
+  - ERC721 token ownership
+  - ERC1155 token balance
+  - Native token (ETH) balance
+  - Custom contract calls
+  - Compound conditions (AND/OR)
+
+## Development
 
 ```bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Building for Production
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+This project is configured to build as a static site, which can be deployed to any static hosting service.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Build the static site
+npm run build
 
-## Learn More
+# The static site will be generated in the 'out' directory
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+After building, the contents of the `out` directory can be deployed to any static hosting service. Here are some examples:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### GitHub Pages
 
-## Deploy on Vercel
+1. Push the repository to GitHub
+2. Enable GitHub Pages in your repository settings
+3. Set the source to the `gh-pages` branch
+4. Run these commands to deploy:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Create and switch to gh-pages branch
+git checkout -b gh-pages
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Build the static site
+npm run build
+
+# Add the out directory to git
+git add out/ -f
+
+# Commit the changes
+git commit -m "Deploy to GitHub Pages"
+
+# Push to GitHub
+git push origin gh-pages
+```
+
+### Netlify/Vercel
+
+1. Connect your repository to Netlify/Vercel
+2. Set the build command to `npm run build`
+3. Set the publish directory to `out`
+
+## Environment Variables
+
+When deploying to a subdirectory (like GitHub Pages), you may need to set the base path. Create a `.env.local` file:
+
+```env
+NEXT_PUBLIC_BASE_PATH=/your-repo-name
+```
+
+## Notes
+
+- The site requires a Web3 wallet (like MetaMask) to function
+- Supported networks: Ethereum, Polygon, Polygon Amoy, Sepolia
+- All encryption/decryption happens client-side
+- No server-side functionality is required

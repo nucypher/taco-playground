@@ -1,11 +1,13 @@
 'use client';
 
-import TacoPlayground from '../components/TacoPlayground';
+import dynamic from 'next/dynamic';
+
+// Use dynamic import to avoid hydration issues with Web3 components
+const TacoPlayground = dynamic(
+  () => import('../components/TacoPlayground'),
+  { ssr: false }
+);
 
 export default function Home() {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <TacoPlayground />
-    </div>
-  );
+  return <TacoPlayground />;
 }

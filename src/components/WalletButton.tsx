@@ -32,9 +32,9 @@ const WalletButton: React.FC<WalletButtonProps> = ({ onConnect }) => {
       setAddress(accounts[0]);
       onConnect(provider);
 
-    } catch (err: any) {
+    } catch (err) {
       console.error('Connection error:', err);
-      setError(err.message || 'Failed to connect wallet');
+      setError(err instanceof Error ? err.message : 'Failed to connect wallet');
     }
   };
 

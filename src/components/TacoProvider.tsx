@@ -16,9 +16,9 @@ const TacoProvider: React.FC<TacoProviderProps> = ({ children }) => {
       try {
         await initialize();
         setIsInitialized(true);
-      } catch (err: any) {
+      } catch (err) {
         console.error('Failed to initialize TACo:', err);
-        setError(err.message || 'Failed to initialize TACo');
+        setError(err instanceof Error ? err.message : 'Failed to initialize TACo');
       }
     };
 

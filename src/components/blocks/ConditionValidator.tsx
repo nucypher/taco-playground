@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { conditions } from '@nucypher/taco';
+import { TacoCondition, ChainId } from '../../types/taco';
 
 // Define supported chains (can be moved to a shared constants file)
 const SUPPORTED_CHAINS = [
@@ -11,57 +12,17 @@ const SUPPORTED_CHAINS = [
   { id: 1, name: 'Ethereum Mainnet' }
 ] as const;
 
-type Comparator = '==' | '>' | '<' | '>=' | '<=' | '!=';
-type StandardContractType = 'ERC20' | 'ERC721';
-
-interface ReturnValueTest {
-  comparator: Comparator;
-  value: any;
-  index?: number;
-}
-
-interface BaseCondition {
-  chain: number;
-  returnValueTest: ReturnValueTest;
-}
-
-interface TimeCondition extends BaseCondition {
-  conditionType: 'time';
-  method: 'blocktime';
-}
-
-interface ContractCondition extends BaseCondition {
-  conditionType: 'contract';
-  contractAddress: string;
-  standardContractType?: StandardContractType;
-  method: string;
-  parameters: any[];
-}
-
-interface RpcCondition extends BaseCondition {
-  method: 'eth_getBalance';
-  parameters: [':userAddress', 'latest'];
-}
-
-interface CompoundCondition {
-  conditionType: 'compound';
-  operator: 'and' | 'or';
-  operands: (TimeCondition | ContractCondition | RpcCondition | CompoundCondition)[];
-}
-
-type TacoCondition = TimeCondition | ContractCondition | RpcCondition | CompoundCondition;
-
 interface ConditionValidatorProps {
-  condition: TacoCondition;
+  condition: TacoCondition | null;
 }
 
 const ConditionValidator: React.FC<ConditionValidatorProps> = ({ condition }) => {
-  const validateCondition = (cond: TacoCondition): boolean => {
+  const validateCondition = React.useCallback((cond: TacoCondition | null): boolean => {
     if (!cond) return false;
 
     try {
       // Handle compound conditions
-      if ('conditionType' in cond && cond.conditionType === 'compound') {
+      if (cond.conditionType === 'compound') {
         if (!cond.operator || !cond.operands || !Array.isArray(cond.operands)) {
           return false;
         }
@@ -70,66 +31,80 @@ const ConditionValidator: React.FC<ConditionValidatorProps> = ({ condition }) =>
       }
 
       // Validate chain ID for all non-compound conditions
-      if ('chain' in cond && !SUPPORTED_CHAINS.some(chain => chain.id === cond.chain)) {
+      if (!SUPPORTED_CHAINS.some(chain => chain.id === cond.chain)) {
         console.error(`Unsupported chain ID: ${cond.chain}`);
         return false;
       }
 
-      // Handle eth_getBalance conditions
-      if ('method' in cond && cond.method === 'eth_getBalance') {
-        if (!Array.isArray(cond.parameters) || cond.parameters.length !== 2 ||
-            cond.parameters[0] !== ':userAddress' || cond.parameters[1] !== 'latest') {
-          return false;
-        }
-        new conditions.base.rpc.RpcCondition({
-          chain: cond.chain,
-          method: cond.method,
-          parameters: cond.parameters as [string, string],
-          returnValueTest: cond.returnValueTest
-        });
-        return true;
-      }
-
-      // Validate based on condition type
-      if ('conditionType' in cond) {
-        switch (cond.conditionType) {
-          case 'time': {
-            new conditions.base.time.TimeCondition({
-              chain: cond.chain,
-              method: cond.method,
-              returnValueTest: cond.returnValueTest
-            });
-            return true;
-          }
-
-          case 'contract': {
-            if (!cond.contractAddress || !cond.method) {
+      // Handle different condition types
+      switch (cond.conditionType) {
+        case 'rpc': {
+          if (cond.method === 'eth_getBalance') {
+            if (!Array.isArray(cond.parameters) || cond.parameters.length !== 2 ||
+                cond.parameters[0] !== ':userAddress' || cond.parameters[1] !== 'latest') {
               return false;
             }
-            new conditions.base.contract.ContractCondition({
-              chain: cond.chain,
-              contractAddress: cond.contractAddress,
-              standardContractType: cond.standardContractType,
+            new conditions.base.rpc.RpcCondition({
+              chain: cond.chain as ChainId,
               method: cond.method,
               parameters: cond.parameters,
               returnValueTest: cond.returnValueTest
             });
             return true;
           }
+          return false;
         }
-      }
 
-      return false;
+        case 'time': {
+          new conditions.base.time.TimeCondition({
+            chain: cond.chain as ChainId,
+            method: cond.method,
+            returnValueTest: cond.returnValueTest
+          });
+          return true;
+        }
+
+        case 'contract': {
+          if (!cond.contractAddress || !cond.method) {
+            return false;
+          }
+
+          // Create base contract condition
+          const baseCondition = {
+            chain: cond.chain as ChainId,
+            contractAddress: cond.contractAddress,
+            method: cond.method,
+            parameters: cond.parameters,
+            returnValueTest: cond.returnValueTest
+          };
+
+          // Only add standardContractType if it's ERC20 or ERC721
+          if (cond.standardContractType === 'ERC20' || cond.standardContractType === 'ERC721') {
+            Object.assign(baseCondition, { standardContractType: cond.standardContractType });
+          }
+
+          // Add functionAbi if present and properly formatted
+          if (cond.functionAbi) {
+            Object.assign(baseCondition, { functionAbi: cond.functionAbi });
+          }
+
+          new conditions.base.contract.ContractCondition(baseCondition);
+          return true;
+        }
+
+        default:
+          return false;
+      }
     } catch (error) {
       console.error('Validation error:', error);
       return false;
     }
-  };
+  }, []);
 
   const isValid = React.useMemo(() => {
     console.log('Validating condition:', condition);
     return validateCondition(condition);
-  }, [condition]);
+  }, [condition, validateCondition]);
 
   return (
     <div className="flex items-center gap-2">

@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import ConditionValidator from './ConditionValidator';
+import { TacoCondition } from '../../types/taco';
 
 interface JsonPreviewProps {
-  condition: any;
+  condition: TacoCondition | null;
 }
 
 const JsonPreview: React.FC<JsonPreviewProps> = ({ condition }) => {

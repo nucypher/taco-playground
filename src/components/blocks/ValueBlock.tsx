@@ -17,8 +17,8 @@ const ValueBlock: React.FC<ValueBlockProps> = ({
   const [value, setValue] = useState(block.value || '');
 
   useEffect(() => {
-    if (block.value !== value) {
-      setValue(block.value || '');
+    if (block.value !== undefined) {
+      setValue(block.value);
     }
   }, [block.value]);
 
@@ -27,6 +27,12 @@ const ValueBlock: React.FC<ValueBlockProps> = ({
     setValue(newValue);
     onChange?.(newValue);
   }, [onChange]);
+
+  const getPlaceholder = () => {
+    if (block.placeholder) return block.placeholder;
+    if (block.label) return `Enter ${block.label.toLowerCase()}`;
+    return '';
+  };
 
   return (
     <div className={`
@@ -44,7 +50,7 @@ const ValueBlock: React.FC<ValueBlockProps> = ({
         type={block.inputType || 'text'}
         value={value}
         onChange={handleChange}
-        placeholder={block.placeholder || `Enter ${block.label.toLowerCase()}`}
+        placeholder={getPlaceholder()}
         className={`
           bg-gray-800/90 rounded px-2 py-1 text-sm w-full text-gray-100
           border border-transparent

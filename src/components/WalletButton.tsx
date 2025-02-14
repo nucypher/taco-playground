@@ -49,18 +49,24 @@ const WalletButton: React.FC<WalletButtonProps> = ({ onConnect }) => {
         {!isConnected ? (
           <button
             onClick={handleConnect}
-            className="px-4 py-2 rounded-md font-medium transition-colors bg-blue-600 hover:bg-blue-700 text-white"
+            className="px-4 py-2 rounded-lg font-medium transition-all duration-200
+              bg-white/5 text-white border border-white/10
+              hover:bg-white/10 hover:border-white/20
+              focus:outline-none focus:ring-1 focus:ring-white/20"
           >
             Connect Wallet
           </button>
         ) : (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-300">
+            <span className="text-sm text-white/60 font-mono">
               {address.slice(0, 6)}...{address.slice(-4)}
             </span>
             <button
               onClick={handleDisconnect}
-              className="px-4 py-2 rounded-md font-medium transition-colors bg-green-600 hover:bg-green-700 text-white"
+              className="px-4 py-2 rounded-lg font-medium transition-all duration-200
+                bg-white/5 text-white border border-white/10
+                hover:bg-white/10 hover:border-white/20
+                focus:outline-none focus:ring-1 focus:ring-white/20"
             >
               Disconnect
             </button>
@@ -68,7 +74,7 @@ const WalletButton: React.FC<WalletButtonProps> = ({ onConnect }) => {
         )}
       </div>
       {error && (
-        <p className="text-sm text-red-500">{error}</p>
+        <p className="text-sm text-red-400 font-mono">{error}</p>
       )}
     </div>
   );

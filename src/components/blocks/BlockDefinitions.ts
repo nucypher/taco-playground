@@ -33,31 +33,10 @@ export const AVAILABLE_BLOCKS: Block[] = [
 
   // Time Conditions
   {
-    id: 'time-lock-template',
-    type: 'condition',
-    category: BLOCK_CATEGORIES.CONDITIONS,
-    label: 'Time Lock',
-    inputs: [
-      { id: 'chain', type: ['value'], label: 'Chain ID', inputType: 'number' },
-      { id: 'timestamp', type: ['value'], label: 'Unix Timestamp', inputType: 'number' }
-    ],
-    properties: {
-      conditionType: 'contract',
-      contractAddress: '',
-      standardContractType: 'timestamp',
-      method: 'eth_getBlockByNumber',
-      parameters: ['latest'],
-      returnValueTest: {
-        comparator: '>=',
-        value: null
-      }
-    }
-  },
-  {
     id: 'timestamp',
     type: 'condition',
     category: BLOCK_CATEGORIES.CONDITIONS,
-    label: 'Timestamp',
+    label: 'Time Lock',
     inputs: [
       { 
         id: 'chain', 
@@ -70,7 +49,8 @@ export const AVAILABLE_BLOCKS: Block[] = [
         id: 'minTimestamp', 
         type: ['value'], 
         label: 'Minimum Timestamp', 
-        inputType: 'number' 
+        inputType: 'number',
+        placeholder: 'Unix timestamp in seconds'
       },
     ],
     properties: {
@@ -181,24 +161,5 @@ export const AVAILABLE_BLOCKS: Block[] = [
     properties: {
       conditionType: 'contract',
     }
-  },
-
-  // Value Blocks
-  {
-    id: 'address',
-    type: 'value',
-    category: BLOCK_CATEGORIES.VALUES,
-    label: 'Address',
-    inputType: 'text',
-    placeholder: '0x...',
-    value: '',
-  },
-  {
-    id: 'number',
-    type: 'value',
-    category: BLOCK_CATEGORIES.VALUES,
-    label: 'Number',
-    inputType: 'number',
-    value: '',
-  },
+  }
 ]; 

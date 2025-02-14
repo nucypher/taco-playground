@@ -16,6 +16,7 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
   const [message, setMessage] = useState('');
   const [isEncrypting, setIsEncrypting] = useState(false);
   const [error, setError] = useState('');
+  const [ciphertext, setCiphertext] = useState<string>('');
 
   const createCondition = (conditionData: any) => {
     // Helper to ensure we use a valid chain ID
@@ -133,6 +134,7 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
   const handleEncrypt = async () => {
     if (!condition || !message) return;
     setError('');
+    setCiphertext('');
 
     try {
       setIsEncrypting(true);
@@ -158,11 +160,14 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
         provider,
         domains.TESTNET,
         message,
-        tacoCondition, // Use the created Taco condition object
-        6, // Ritual ID #6
+        tacoCondition,
+        6,
         signer
       );
 
+      // Convert the messageKit to a base64 string for display
+      const messageKitString = btoa(JSON.stringify(messageKit));
+      setCiphertext(messageKitString);
       onMessageKitGenerated(messageKit);
     } catch (error: any) {
       console.error('Encryption error:', error);
@@ -172,40 +177,77 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
     }
   };
 
+  const handleClear = () => {
+    setMessage('');
+    setCiphertext('');
+    setError('');
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-sm font-medium text-gray-100">Encrypt Message</h3>
+    <div className="space-y-6 p-6 bg-black border border-white/10 rounded-lg">
+      <div className="flex justify-between items-center border-b border-white/10 pb-4">
+        <h3 className="text-sm font-medium text-white tracking-wide uppercase">Encrypt Message</h3>
       </div>
       
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-white/80 mb-2">
             Message
           </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Enter message to encrypt..."
-            className="w-full h-24 px-3 py-2 bg-gray-800 text-gray-100 border border-gray-700 rounded-md 
-              placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full h-24 px-3 py-2 bg-white/5 text-white border border-white/10 rounded-lg
+              placeholder-white/30 font-mono text-sm
+              focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20
+              transition-all duration-200"
           />
         </div>
 
-        <button
-          onClick={handleEncrypt}
-          disabled={!message || !condition}
-          className="w-full px-4 py-2 bg-blue-600 text-white rounded-md font-medium
-            hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-            disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {isEncrypting ? 'Encrypting...' : 'Encrypt Message'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleEncrypt}
+            disabled={!message || !condition || isEncrypting}
+            className="flex-1 px-4 py-3 bg-white/5 text-white rounded-lg font-medium
+              border border-white/10 transition-all duration-200
+              hover:bg-white/10 hover:border-white/20
+              disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/5 disabled:hover:border-white/10
+              focus:outline-none focus:ring-1 focus:ring-white/20"
+          >
+            <div className="flex items-center justify-center space-x-2">
+              {isEncrypting && (
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              )}
+              <span>{isEncrypting ? 'Encrypting...' : 'Encrypt Message'}</span>
+            </div>
+          </button>
+
+          <button
+            onClick={handleClear}
+            disabled={isEncrypting || (!message && !error)}
+            className="px-4 py-3 bg-white/5 text-white rounded-lg font-medium
+              border border-white/10 transition-all duration-200
+              hover:bg-white/10 hover:border-white/20
+              disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/5 disabled:hover:border-white/10
+              focus:outline-none focus:ring-1 focus:ring-white/20"
+          >
+            <div className="flex items-center justify-center space-x-2">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span>Clear</span>
+            </div>
+          </button>
+        </div>
       </div>
 
       {error && (
-        <div className="p-3 bg-red-900/50 border border-red-700 rounded-md">
-          <p className="text-sm text-red-200">{error}</p>
+        <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-lg">
+          <p className="text-sm text-red-400 font-mono">{error}</p>
         </div>
       )}
     </div>

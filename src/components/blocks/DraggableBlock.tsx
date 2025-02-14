@@ -231,30 +231,42 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
     <div
       ref={combineRefs(elementRef, drag)}
       className={`
-        ${block.type === 'condition' ? 'bg-purple-700' : ''}
-        ${block.type === 'operator' ? 'bg-blue-700' : ''}
-        text-white p-3 rounded-lg cursor-move
+        relative
+        ${block.type === 'condition' ? 'bg-black border border-white/20' : ''}
+        ${block.type === 'operator' ? 'bg-black border border-white/20' : ''}
+        text-white p-4 rounded-lg cursor-move
         transition-all duration-200 ease-in-out
-        hover:scale-[1.02] hover:shadow-lg
-        active:scale-95
-        ${isDragging ? 'opacity-50 scale-105 rotate-2' : 'opacity-100'}
+        hover:border-white/40 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]
+        active:scale-[0.98]
+        ${isDragging ? 'opacity-50 shadow-2xl rotate-2' : 'opacity-100'}
       `}
     >
-      <div className="font-medium">{block.label}</div>
+      <div className="flex items-center gap-2">
+        {/* Block Type Indicator */}
+        <div className={`
+          w-2 h-2 rounded-full
+          ${block.type === 'condition' ? 'bg-purple-400' : ''}
+          ${block.type === 'operator' ? 'bg-blue-400' : ''}
+        `} />
+        <div className="font-medium tracking-wide text-sm">{block.label}</div>
+      </div>
+
       {(block.type === 'condition' || block.type === 'operator') && block.inputs && block.inputs.length > 0 && (
-        <div className="mt-2 space-y-2">
+        <div className="mt-3 space-y-3">
           {block.inputs.map((input) => (
-            <div key={input.id} className="flex items-center space-x-2">
-              <label className="text-sm text-gray-300">{input.label}:</label>
+            <div key={input.id} className="space-y-1.5">
+              <label className="text-xs text-white/60 font-medium">
+                {input.label}
+              </label>
               {block.type === 'operator' ? (
                 <DropTarget
                   inputId={input.id}
                   isWorkspaceBlock={isWorkspaceBlock}
                   onDrop={handleDrop}
-                  className="flex-1 px-2 py-1 text-sm rounded border
+                  className="flex-1 px-3 py-2 text-sm rounded-lg
                     transition-all duration-200 ease-in-out
-                    bg-gray-800 border-gray-600
-                    hover:border-opacity-100"
+                    bg-white/5 border border-white/10
+                    hover:border-white/20"
                 >
                   {input.connected ? (
                     <div className="flex justify-between items-center">
@@ -264,16 +276,17 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
                       {isWorkspaceBlock && (
                         <button
                           onClick={() => handleRemoveCondition(input.id)}
-                          className="text-xs text-gray-400 hover:text-white ml-2
-                            transition-colors duration-200
-                            hover:bg-red-500/20 rounded-full p-1"
+                          className="ml-2 p-1 rounded-full text-white/40 hover:text-white/80
+                            hover:bg-white/10 transition-colors duration-200"
                         >
-                          ×
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
                         </button>
                       )}
                     </div>
                   ) : (
-                    <div className="text-gray-400">
+                    <div className="text-white/40 text-sm">
                       Drop condition here
                     </div>
                   )}
@@ -282,12 +295,15 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
                 <div className="flex-1">
                   <input
                     type={input.inputType || 'text'}
-                    className="w-full px-2 py-1 text-sm bg-gray-800 rounded border border-gray-600 text-white
-                      transition-colors duration-200
-                      focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm bg-white/5 rounded-lg
+                      border border-white/10 text-white placeholder-white/30
+                      transition-all duration-200
+                      focus:border-white/30 focus:ring-1 focus:ring-white/20
+                      hover:border-white/20"
                     value={input.value || ''}
                     onChange={(e) => handleValueChange(input.id, e)}
                     onClick={(e) => e.stopPropagation()}
+                    placeholder={input.placeholder || `Enter ${input.label.toLowerCase()}...`}
                   />
                 </div>
               )}

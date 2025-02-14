@@ -50,6 +50,12 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
     );
   }, [blocks]);
 
+  const handleClear = () => {
+    setBlocks([]);
+    prevJsonRef.current = '';
+    onConditionChange(null);
+  };
+
   const [{ isOver, canDrop }, drop] = useDrop(() => ({
     accept: 'block',
     canDrop: (item: any) => {
@@ -86,29 +92,65 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
   drop(elementRef);
 
   return (
-    <div
-      ref={elementRef}
-      className={`
-        min-h-[400px] p-4 rounded-lg
-        ${isOver && canDrop ? 'bg-gray-800' : 'bg-gray-900'}
-        ${isOver && !canDrop ? 'bg-red-900/20' : ''}
-        ${!isOver && canDrop ? 'bg-gray-900 border-2 border-dashed border-gray-700' : ''}
-      `}
-    >
-      <div className="space-y-4">
-        {blocks.map((block) => (
-          <DraggableBlock
-            key={block.id}
-            block={block}
-            isWorkspaceBlock={true}
-            onBlockUpdate={handleBlockUpdate}
-          />
-        ))}
-        {blocks.length === 0 && (
-          <div className="text-center text-gray-500 py-8">
-            Drag condition or operator blocks here
-          </div>
+    <div className="space-y-3 bg-black border border-white/10 rounded-lg p-6">
+      <div className="flex justify-between items-center border-b border-white/10 pb-4">
+        <h3 className="text-sm font-medium text-white tracking-wide uppercase">
+          Workspace
+        </h3>
+        {blocks.length > 0 && (
+          <button
+            onClick={handleClear}
+            className="px-3 py-1.5 bg-white/5 text-white rounded-lg text-sm font-medium
+              border border-white/10 transition-all duration-200
+              hover:bg-white/10 hover:border-white/20
+              focus:outline-none focus:ring-1 focus:ring-white/20
+              flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+              />
+            </svg>
+            <span>Clear Workspace</span>
+          </button>
         )}
+      </div>
+
+      <div
+        ref={elementRef}
+        className={`
+          min-h-[400px] p-4 rounded-lg overflow-y-auto
+          bg-black/50 border transition-all duration-200
+          scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-white/10
+          hover:scrollbar-thumb-white/20
+          [&::-webkit-scrollbar]:w-2
+          [&::-webkit-scrollbar-track]:bg-white/5
+          [&::-webkit-scrollbar-thumb]:bg-white/10
+          [&::-webkit-scrollbar-thumb]:rounded-full
+          [&::-webkit-scrollbar-thumb]:border-2
+          [&::-webkit-scrollbar-thumb]:border-transparent
+          [&::-webkit-scrollbar-thumb]:bg-clip-padding
+          [&::-webkit-scrollbar-thumb]:hover:bg-white/20
+          ${isOver && canDrop ? 'border-white/20 bg-white/5' : 'border-white/10'}
+          ${isOver && !canDrop ? 'border-red-500/20 bg-red-500/5' : ''}
+          ${!isOver && canDrop ? 'border-white/20 border-dashed' : ''}
+        `}
+      >
+        <div className="space-y-4">
+          {blocks.map((block) => (
+            <DraggableBlock
+              key={block.id}
+              block={block}
+              isWorkspaceBlock={true}
+              onBlockUpdate={handleBlockUpdate}
+            />
+          ))}
+          {blocks.length === 0 && (
+            <div className="text-center text-white/40 py-8">
+              Drag condition or operator blocks here
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

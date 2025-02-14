@@ -10,7 +10,6 @@ import JsonPreview from './blocks/JsonPreview';
 import EncryptionPanel from './EncryptionPanel';
 import DecryptionPanel from './DecryptionPanel';
 import TacoProvider from './TacoProvider';
-import NetworkCheck from './NetworkCheck';
 
 const TacoPlayground: React.FC = () => {
   const [currentCondition, setCurrentCondition] = useState<any>(null);
@@ -29,7 +28,6 @@ const TacoPlayground: React.FC = () => {
     <DndProvider backend={HTML5Backend}>
       <TacoProvider>
         <MainLayout>
-          <NetworkCheck />
           <div className="flex flex-col gap-3 max-w-[1600px] mx-auto">
             <WorkspaceLayout
               workspace={
@@ -41,13 +39,13 @@ const TacoPlayground: React.FC = () => {
             />
             
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-3">
+              <div className="bg-black rounded-lg">
                 <EncryptionPanel
                   condition={currentCondition}
                   onMessageKitGenerated={setMessageKit}
                 />
               </div>
-              <div className="bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-3">
+              <div className="bg-black rounded-lg">
                 <DecryptionPanel messageKit={messageKit} />
               </div>
             </div>

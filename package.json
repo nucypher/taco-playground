@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && cp -r .next/static out/ && cp -r .next/server/app/* out/",
+    "build": "next build",
     "start": "next start",
+    "serve": "npx serve -s out",
     "lint": "next lint"
   },
   "dependencies": {

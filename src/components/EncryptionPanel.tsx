@@ -42,16 +42,21 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
 
       // Create the appropriate condition instance based on type
       let tacoCondition;
-      if (condition.conditionType === 'compound') {
-        tacoCondition = new conditions.compound.CompoundCondition(condition);
-      } else if (condition.conditionType === 'rpc') {
-        tacoCondition = new conditions.base.rpc.RpcCondition(condition);
-      } else if (condition.conditionType === 'contract') {
-        tacoCondition = new conditions.base.contract.ContractCondition(condition);
-      } else if (condition.conditionType === 'time') {
-        tacoCondition = new conditions.base.time.TimeCondition(condition);
-      } else {
-        throw new Error(`Unsupported condition type: ${condition.conditionType}`);
+      switch (condition.conditionType) {
+        case 'compound':
+          tacoCondition = new conditions.compound.CompoundCondition(condition);
+          break;
+        case 'rpc':
+          tacoCondition = new conditions.base.rpc.RpcCondition(condition);
+          break;
+        case 'contract':
+          tacoCondition = new conditions.base.contract.ContractCondition(condition);
+          break;
+        case 'time':
+          tacoCondition = new conditions.base.time.TimeCondition(condition);
+          break;
+        default:
+          throw new Error('Unsupported condition type');
       }
 
       const messageKit = await encrypt(

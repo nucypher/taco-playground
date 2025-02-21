@@ -28,9 +28,23 @@ export interface ContractCondition extends BaseCondition {
   method: string;
   parameters: unknown[];
   functionAbi?: {
+    type: 'function';
     name: string;
-    inputs: { type: string }[];
-    outputs: { type: string }[];
+    inputs: {
+      type: string;
+      name: string;
+      internalType: string;
+    }[];
+    outputs: [{
+      type: string;
+      name: string;
+      internalType: string;
+    }, ...{
+      type: string;
+      name: string;
+      internalType: string;
+    }[]];
+    stateMutability: 'view' | 'pure';
   };
 }
 

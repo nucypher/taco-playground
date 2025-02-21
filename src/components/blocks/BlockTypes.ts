@@ -5,8 +5,6 @@ export type ConditionType =
   | 'customABIMultipleParameters'
   | 'TStaking'
   | 'SubscriptionManagerPayment'
-  | 'ERC1155_balance'
-  | 'ERC1155_balance_batch'
   | 'ERC721_ownership'
   | 'ERC721_balance'
   | 'ERC20_balance'

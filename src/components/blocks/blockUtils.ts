@@ -9,12 +9,26 @@ interface ConditionBuilder {
   contractAddress?: string;
   method?: string;
   parameters?: unknown[];
-  standardContractType?: 'ERC20' | 'ERC721' | 'ERC1155';
+  standardContractType?: 'ERC20' | 'ERC721';
   returnValueTest?: ReturnValueTest;
   functionAbi?: {
+    type: 'function';
     name: string;
-    inputs: { type: string }[];
-    outputs: { type: string }[];
+    inputs: {
+      type: string;
+      name: string;
+      internalType: string;
+    }[];
+    outputs: [{
+      type: string;
+      name: string;
+      internalType: string;
+    }, ...{
+      type: string;
+      name: string;
+      internalType: string;
+    }[]];
+    stateMutability: 'view' | 'pure';
   };
 }
 
@@ -162,7 +176,20 @@ export const blocksToJson = (blocks: Block[]): TacoCondition | null => {
           break;
         case 'functionAbi':
           try {
-            builder.functionAbi = JSON.parse(value);
+            const parsedAbi = JSON.parse(value);
+            if (
+              parsedAbi &&
+              parsedAbi.type === 'function' &&
+              parsedAbi.name &&
+              Array.isArray(parsedAbi.inputs) &&
+              Array.isArray(parsedAbi.outputs) &&
+              parsedAbi.outputs.length > 0 &&
+              (parsedAbi.stateMutability === 'view' || parsedAbi.stateMutability === 'pure')
+            ) {
+              builder.functionAbi = parsedAbi;
+            } else {
+              console.error('Invalid function ABI format:', parsedAbi);
+            }
           } catch (e) {
             console.error('Failed to parse function ABI:', e);
           }
@@ -200,13 +227,20 @@ export const blocksToJson = (blocks: Block[]): TacoCondition | null => {
         return null;
       }
 
+      // Only allow ERC20 and ERC721 as standardContractType
+      const standardContractType = block.properties.standardContractType;
+      const validatedContractType = 
+        standardContractType === 'ERC20' || standardContractType === 'ERC721' 
+          ? standardContractType 
+          : undefined;
+
       const contractCondition: ContractCondition = {
         conditionType: 'contract',
         chain: builder.chain,
         contractAddress: builder.contractAddress || '',
         method: method,
         parameters: (block.properties.parameters as unknown[]) || builder.parameters || [],
-        standardContractType: block.properties.standardContractType as 'ERC20' | 'ERC721' | 'ERC1155' | undefined,
+        standardContractType: validatedContractType,
         returnValueTest: builder.returnValueTest || {
           comparator: '>',
           value: 0

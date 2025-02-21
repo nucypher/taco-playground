@@ -31,9 +31,38 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
         const connectedBlock = parentInput.connected;
         const targetInput = connectedBlock.inputs?.find((input: BlockInput) => input.id === inputId);
         if (targetInput) {
-          // Preserve any existing values and properties
-          targetInput.value = targetInput.value || '';
-          targetInput.inputType = targetInput.inputType || 'text';
+          // Create a new block from the dropped item
+          const droppedBlock = JSON.parse(JSON.stringify(item)) as Block;
+          droppedBlock.isTemplate = false;
+
+          // Initialize values for all inputs in the dropped block
+          if (droppedBlock.inputs) {
+            droppedBlock.inputs = droppedBlock.inputs.map((input: BlockInput) => ({
+              ...input,
+              value: input.value || '',
+              inputType: input.inputType || 'text'
+            }));
+          }
+
+          // Connect the dropped block
+          targetInput.connected = droppedBlock;
+
+          // If this is an operator block, add a new input slot if needed
+          if (connectedBlock.type === 'operator') {
+            const connectedCount = connectedBlock.inputs?.filter((input: BlockInput) => input.connected).length || 0;
+            const maxInputs = connectedBlock.properties?.maxInputs;
+            const lastInput = connectedBlock.inputs?.[connectedBlock.inputs.length - 1];
+
+            if (lastInput?.id === inputId && (!maxInputs || connectedCount < maxInputs)) {
+              connectedBlock.inputs.push({
+                id: `condition-${Date.now()}`,
+                type: ['condition', 'operator'],
+                label: 'Add Condition'
+              });
+            }
+          }
+
+          // Update the parent input with the modified connected block
           parentInput.connected = connectedBlock;
           onBlockUpdate(updatedBlock);
         }
@@ -44,7 +73,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
         const droppedBlock = JSON.parse(JSON.stringify(item)) as Block;
         droppedBlock.isTemplate = false;
 
-        // Initialize values for all inputs in the dropped condition
+        // Initialize values for all inputs in the dropped block
         if (droppedBlock.inputs) {
           droppedBlock.inputs = droppedBlock.inputs.map((input: BlockInput) => ({
             ...input,
@@ -108,7 +137,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
     };
   }, []);
 
-  const handleValueChange = (inputId: string, e: React.ChangeEvent<HTMLInputElement>, parentInputId?: string) => {
+  const handleValueChange = (inputId: string, e: React.ChangeEvent<HTMLInputElement>, parentPath?: string[]) => {
     if (!onBlockUpdate || !isWorkspaceBlock) return;
 
     const value = e.target.value;
@@ -117,50 +146,43 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
     console.log('Handling value change:', {
       inputId,
       value,
-      parentInputId,
+      parentPath,
       currentBlock: block
     });
-    
-    if (parentInputId) {
-      // Handle inputs in connected blocks
-      const parentInput = updatedBlock.inputs?.find((i: BlockInput) => i.id === parentInputId);
-      console.log('Found parent input:', parentInput);
-      
-      if (parentInput?.connected) {
-        const connectedBlock = parentInput.connected;
-        console.log('Connected block:', connectedBlock);
-        
-        const targetInput = connectedBlock.inputs?.find((i: BlockInput) => i.id === inputId);
-        console.log('Target input:', targetInput);
-        
-        if (targetInput) {
-          // Always store the raw value to preserve user input
-          targetInput.value = value;
-          
-          // Create a new connected block with updated inputs
-          const updatedConnectedBlock = {
-            ...connectedBlock,
-            inputs: connectedBlock.inputs?.map((input: BlockInput) => 
-              input.id === inputId 
-                ? { ...input, value }
-                : input
-            )
-          };
-          
-          // Update the parent input with the new connected block
-          parentInput.connected = updatedConnectedBlock;
-          
-          console.log('Updated connected block:', updatedConnectedBlock);
-          console.log('Final block state:', updatedBlock);
-          
-          onBlockUpdate(updatedBlock);
+
+    // Helper function to find and update nested input following a path
+    const findAndUpdateInput = (currentBlock: Block, targetInputId: string, path: string[]): boolean => {
+      if (path.length === 0) {
+        // We've reached the target level, look for our input
+        const directInput = currentBlock.inputs?.find((input: BlockInput) => input.id === targetInputId);
+        if (directInput) {
+          directInput.value = value;
+          return true;
         }
+        return false;
+      }
+
+      // Get the next input in the path
+      const nextInputId = path[0];
+      const nextInput = currentBlock.inputs?.find((input: BlockInput) => input.id === nextInputId);
+      
+      if (nextInput?.connected) {
+        // Continue down the path
+        return findAndUpdateInput(nextInput.connected, targetInputId, path.slice(1));
+      }
+      
+      return false;
+    };
+    
+    if (parentPath && parentPath.length > 0) {
+      // Find the input by following the parent path
+      if (findAndUpdateInput(updatedBlock, inputId, parentPath)) {
+        onBlockUpdate(updatedBlock);
       }
     } else {
       // Handle top-level inputs
-      const input = updatedBlock.inputs?.find((i: BlockInput) => i.id === inputId);
+      const input = updatedBlock.inputs?.find((input: BlockInput) => input.id === inputId);
       if (input) {
-        // Always store the raw value to preserve user input
         input.value = value;
         onBlockUpdate(updatedBlock);
       }
@@ -199,7 +221,64 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
     onBlockUpdate(updatedBlock);
   };
 
-  const renderConnectedBlock = (connectedBlock: Block, parentInputId: string) => {
+  const renderConnectedBlock = (connectedBlock: Block, parentPath: string[]) => {
+    if (connectedBlock.type === 'operator') {
+      // Render nested operator block
+      return (
+        <div className="mt-2 bg-black border border-white/10 rounded-lg p-3
+          transition-all duration-200 hover:border-white/20">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-blue-400" />
+            <div className="font-medium text-sm">{connectedBlock.label}</div>
+          </div>
+          {connectedBlock.inputs && connectedBlock.inputs.length > 0 && (
+            <div className="mt-3 space-y-3">
+              {connectedBlock.inputs.map((input) => (
+                <div key={input.id} className="space-y-1.5">
+                  <label className="text-xs text-white/60 font-medium">
+                    {input.label}
+                  </label>
+                  <DropTarget
+                    inputId={input.id}
+                    parentInputId={parentPath[parentPath.length - 1]}
+                    isWorkspaceBlock={isWorkspaceBlock}
+                    onDrop={handleDrop}
+                    className="flex-1 px-3 py-2 text-sm rounded-lg
+                      transition-all duration-200 ease-in-out
+                      bg-white/5 border border-white/10
+                      hover:border-white/20"
+                  >
+                    {input.connected ? (
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1">
+                          {renderConnectedBlock(input.connected, [...parentPath, input.id])}
+                        </div>
+                        {isWorkspaceBlock && (
+                          <button
+                            onClick={() => handleRemoveCondition(input.id)}
+                            className="ml-2 p-1 rounded-full text-white/40 hover:text-white/80
+                              hover:bg-white/10 transition-colors duration-200"
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-white/40 text-sm">
+                        Drop condition or operator here
+                      </div>
+                    )}
+                  </DropTarget>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     if (connectedBlock.type === 'condition') {
       return (
         <div className="mt-2 bg-black border border-white/10 rounded-lg p-3
@@ -223,7 +302,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
                       focus:border-white/30 focus:ring-1 focus:ring-white/20
                       hover:border-white/20"
                     value={input.value || ''}
-                    onChange={(e) => handleValueChange(input.id, e, parentInputId)}
+                    onChange={(e) => handleValueChange(input.id, e, parentPath)}
                     onClick={(e) => e.stopPropagation()}
                     placeholder={input.placeholder || `Enter ${input.label.toLowerCase()}...`}
                   />
@@ -285,7 +364,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
                   {input.connected ? (
                     <div className="flex justify-between items-center">
                       <div className="flex-1">
-                        {renderConnectedBlock(input.connected, input.id)}
+                        {renderConnectedBlock(input.connected, [input.id])}
                       </div>
                       {isWorkspaceBlock && (
                         <button
@@ -301,7 +380,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
                     </div>
                   ) : (
                     <div className="text-white/40 text-sm">
-                      Drop condition here
+                      Drop condition or operator here
                     </div>
                   )}
                 </DropTarget>

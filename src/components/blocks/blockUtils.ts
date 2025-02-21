@@ -38,10 +38,18 @@ export const blocksToJson = (blocks: Block[]): TacoCondition | null => {
 
       // Process each connected condition
       const operands = connectedConditions
-        .map(connectedBlock => processBlock(connectedBlock))
+        .map(connectedBlock => {
+          // Recursively process each connected block
+          const processedOperand = processBlock(connectedBlock);
+          if (!processedOperand) {
+            console.error('Failed to process operand:', connectedBlock);
+            return null;
+          }
+          return processedOperand;
+        })
         .filter((condition): condition is ProcessedCondition => condition !== null);
 
-      // For NOT operator, ensure we only have one operand and structure it correctly
+      // For NOT operator, ensure we only have one operand
       if (block.properties.operator === 'not') {
         if (operands.length === 0) return null;
         // Ensure the operand is a valid condition with all required fields

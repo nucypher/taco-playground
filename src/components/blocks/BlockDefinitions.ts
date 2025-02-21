@@ -121,27 +121,6 @@ export const AVAILABLE_BLOCKS: Block[] = [
       }
     }
   },
-  {
-    id: 'erc1155-balance',
-    type: 'condition',
-    category: BLOCK_CATEGORIES.CONDITIONS,
-    label: 'ERC1155 Balance',
-    inputs: [
-      { id: 'contractAddress', type: ['value'], label: 'Contract Address' },
-      { id: 'tokenId', type: ['value'], label: 'Token ID', inputType: 'number' },
-      { id: 'chain', type: ['value'], label: 'Chain ID', inputType: 'number' },
-      { id: 'minBalance', type: ['value'], label: 'Min Balance', inputType: 'number' },
-    ],
-    properties: {
-      conditionType: 'contract',
-      standardContractType: 'ERC1155',
-      method: 'balanceOf',
-      returnValueTest: {
-        comparator: '>',
-        value: 0
-      }
-    }
-  },
 
   // Native Token Conditions
   {

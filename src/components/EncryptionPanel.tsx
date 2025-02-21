@@ -3,9 +3,7 @@
 import React, { useState } from 'react';
 import { encrypt, domains, conditions, ThresholdMessageKit } from '@nucypher/taco';
 import { ethers } from 'ethers';
-import { TacoCondition, RpcCondition, TimeCondition, ContractCondition, CompoundCondition } from '../types/taco';
-
-type TacoBaseCondition = conditions.base.rpc.RpcCondition | conditions.base.time.TimeCondition | conditions.base.contract.ContractCondition;
+import { TacoCondition } from '../types/taco';
 
 interface EncryptionPanelProps {
   condition: TacoCondition | null;
@@ -20,87 +18,6 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
 }) => {
   const [message, setMessage] = useState('');
   const [isEncrypting, setIsEncrypting] = useState(false);
-
-  const createCondition = (conditionData: TacoCondition): TacoBaseCondition | conditions.compound.CompoundCondition => {
-    // Helper to ensure we use a valid chain ID
-    const getValidChainId = (chain: number) => {
-      const validChains = [137, 80002, 11155111, 1];
-      const chainId = validChains.find(id => id === chain);
-      if (!chainId) {
-        throw new Error(`Invalid chain ID. Must be one of: ${validChains.join(', ')}`);
-      }
-      return chainId;
-    };
-
-    if (conditionData.conditionType === 'rpc' && conditionData.method === 'eth_getBalance') {
-      // Handle native balance check as RPC condition
-      const rpcCondition = conditionData as RpcCondition;
-      console.log('Creating RPC condition for eth_getBalance:', rpcCondition);
-      return new conditions.base.rpc.RpcCondition({
-        chain: getValidChainId(rpcCondition.chain),
-        method: rpcCondition.method,
-        parameters: [':userAddress', 'latest'],
-        returnValueTest: rpcCondition.returnValueTest
-      });
-    }
-
-    if (conditionData.conditionType === 'time') {
-      // Time conditions should use blocktime method
-      const timeCondition = conditionData as TimeCondition;
-      console.log('Creating time condition:', timeCondition);
-      const validChain = getValidChainId(timeCondition.chain);
-      console.log('Using chain ID:', validChain, 'type:', typeof validChain);
-      
-      // Create a proper time condition with all required fields
-      const condition = new conditions.base.time.TimeCondition({
-        chain: validChain,
-        method: 'blocktime',
-        returnValueTest: timeCondition.returnValueTest
-      });
-      console.log('Created time condition with full details:', {
-        condition,
-        schema: condition.schema,
-        value: condition.value
-      });
-      return condition;
-    }
-
-    if (conditionData.conditionType === 'contract') {
-      // All token-related conditions use ContractCondition
-      const contractCondition = conditionData as ContractCondition;
-      const condition = new conditions.base.contract.ContractCondition({
-        contractAddress: contractCondition.contractAddress,
-        chain: getValidChainId(contractCondition.chain),
-        method: contractCondition.method,
-        parameters: contractCondition.parameters,
-        standardContractType: contractCondition.standardContractType as 'ERC20' | 'ERC721' | undefined,
-        returnValueTest: contractCondition.returnValueTest
-      });
-      console.log('Created contract condition:', condition);
-      return condition;
-    }
-
-    if (conditionData.conditionType === 'compound') {
-      // Process each operand recursively
-      const compoundCondition = conditionData as CompoundCondition;
-      console.log('Processing compound condition:', compoundCondition);
-      const operands = compoundCondition.operands.map(operand => {
-        console.log('Processing operand:', operand);
-        return createCondition(operand);
-      });
-
-      console.log('Creating compound condition with operands:', operands);
-      // Create compound condition
-      const condition = new conditions.compound.CompoundCondition({
-        operator: compoundCondition.operator,
-        operands
-      });
-      console.log('Created compound condition:', condition);
-      return condition;
-    }
-
-    throw new Error(`Unsupported condition type: ${(conditionData as TacoCondition).conditionType}`);
-  };
 
   const handleEncrypt = async () => {
     if (!condition || !message) return;
@@ -121,9 +38,21 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
 
       const signer = provider.getSigner();
 
-      // Create a proper Taco condition object from the JSON
-      const tacoCondition = createCondition(condition);
-      console.log('Created Taco condition:', tacoCondition);
+      console.log('Using condition:', JSON.stringify(condition, null, 2));
+
+      // Create the appropriate condition instance based on type
+      let tacoCondition;
+      if (condition.conditionType === 'compound') {
+        tacoCondition = new conditions.compound.CompoundCondition(condition);
+      } else if (condition.conditionType === 'rpc') {
+        tacoCondition = new conditions.base.rpc.RpcCondition(condition);
+      } else if (condition.conditionType === 'contract') {
+        tacoCondition = new conditions.base.contract.ContractCondition(condition);
+      } else if (condition.conditionType === 'time') {
+        tacoCondition = new conditions.base.time.TimeCondition(condition);
+      } else {
+        throw new Error(`Unsupported condition type: ${condition.conditionType}`);
+      }
 
       const messageKit = await encrypt(
         provider,

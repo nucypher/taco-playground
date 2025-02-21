@@ -41,10 +41,52 @@ export const blocksToJson = (blocks: Block[]): TacoCondition | null => {
         .map(connectedBlock => processBlock(connectedBlock))
         .filter((condition): condition is ProcessedCondition => condition !== null);
 
-      // Create compound condition
+      // For NOT operator, ensure we only have one operand and structure it correctly
+      if (block.properties.operator === 'not') {
+        if (operands.length === 0) return null;
+        // Ensure the operand is a valid condition with all required fields
+        const operand = operands[0];
+        if (!operand) return null;
+        
+        // Validate the operand has required fields based on its type
+        if (operand.conditionType === 'rpc') {
+          if (!operand.chain || !isValidChainId(operand.chain) || 
+              operand.method !== 'eth_getBalance' ||
+              !operand.parameters || !Array.isArray(operand.parameters) ||
+              operand.parameters[0] !== ':userAddress' || operand.parameters[1] !== 'latest' ||
+              !operand.returnValueTest) {
+            console.error('Invalid RPC operand for NOT:', operand);
+            return null;
+          }
+        }
+        if (operand.conditionType === 'time') {
+          if (!operand.chain || !isValidChainId(operand.chain) ||
+              operand.method !== 'blocktime' ||
+              !operand.returnValueTest) {
+            console.error('Invalid time operand for NOT:', operand);
+            return null;
+          }
+        }
+        if (operand.conditionType === 'contract') {
+          if (!operand.chain || !isValidChainId(operand.chain) ||
+              !operand.contractAddress || !operand.method ||
+              !operand.returnValueTest) {
+            console.error('Invalid contract operand for NOT:', operand);
+            return null;
+          }
+        }
+        
+        return {
+          conditionType: 'compound',
+          operator: 'not',
+          operands: [operand]
+        } as CompoundCondition;
+      }
+
+      // Create compound condition for AND/OR
       const compoundCondition: CompoundCondition = {
         conditionType: 'compound',
-        operator: (block.properties.operator as 'and' | 'or') || 'and',
+        operator: (block.properties.operator as 'and' | 'or'),
         operands
       };
 
@@ -136,19 +178,40 @@ export const blocksToJson = (blocks: Block[]): TacoCondition | null => {
     }
 
     // For contract conditions
-    if (block.properties?.conditionType === 'contract' && builder.chain && builder.method) {
+    if (block.properties?.conditionType === 'contract' && builder.chain) {
+      console.log('Processing contract condition:', {
+        properties: block.properties,
+        builder,
+        inputs: block.inputs
+      });
+
+      // Get method from either block properties or builder
+      const method = (block.properties.method as string) || builder.method;
+      if (!method) {
+        console.log('No method found for contract condition');
+        return null;
+      }
+
       const contractCondition: ContractCondition = {
         conditionType: 'contract',
         chain: builder.chain,
         contractAddress: builder.contractAddress || '',
-        method: builder.method,
-        parameters: builder.parameters || [],
+        method: method,
+        parameters: (block.properties.parameters as unknown[]) || builder.parameters || [],
         standardContractType: block.properties.standardContractType as 'ERC20' | 'ERC721' | 'ERC1155' | undefined,
         returnValueTest: builder.returnValueTest || {
           comparator: '>',
           value: 0
         }
       };
+
+      // For ERC20 balanceOf, ensure we have the correct parameters
+      if (block.properties.standardContractType === 'ERC20' && method === 'balanceOf') {
+        console.log('Setting up ERC20 balanceOf parameters');
+        contractCondition.parameters = [':userAddress'];
+      }
+
+      console.log('Created contract condition:', contractCondition);
       return contractCondition;
     }
 

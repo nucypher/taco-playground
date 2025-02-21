@@ -24,7 +24,7 @@ export interface TimeCondition extends BaseCondition {
 export interface ContractCondition extends BaseCondition {
   conditionType: 'contract';
   contractAddress: string;
-  standardContractType?: 'ERC20' | 'ERC721' | 'ERC1155';
+  standardContractType?: 'ERC20' | 'ERC721';
   method: string;
   parameters: unknown[];
   functionAbi?: {
@@ -42,7 +42,7 @@ export interface RpcCondition extends BaseCondition {
 
 export interface CompoundCondition {
   conditionType: 'compound';
-  operator: 'and' | 'or';
+  operator: 'and' | 'or' | 'not';
   operands: (TimeCondition | ContractCondition | RpcCondition | CompoundCondition)[];
 }
 

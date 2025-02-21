@@ -59,7 +59,11 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
         input.label = `Condition ${connectedCount}`;
 
         const lastInput = updatedBlock.inputs?.[updatedBlock.inputs.length - 1];
-        if (lastInput?.id === inputId) {
+        const maxInputs = updatedBlock.properties?.maxInputs;
+        
+        // Only add new input slot if we haven't reached maxInputs (if specified)
+        if (lastInput?.id === inputId && 
+            (!maxInputs || connectedCount < maxInputs)) {
           updatedBlock.inputs.push({
             id: `condition-${Date.now()}`,
             type: ['condition', 'operator'],

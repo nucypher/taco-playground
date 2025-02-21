@@ -30,6 +30,21 @@ export const AVAILABLE_BLOCKS: Block[] = [
       operands: []
     }
   },
+  {
+    id: 'not-operator',
+    type: 'operator',
+    category: BLOCK_CATEGORIES.OPERATORS,
+    label: 'NOT',
+    inputs: [
+      { id: 'condition-1', type: ['condition', 'operator'], label: 'Condition to Negate' }
+    ],
+    properties: {
+      conditionType: 'compound',
+      operator: 'not',
+      operands: [],
+      maxInputs: 1
+    }
+  },
 
   // Time Conditions
   {
@@ -43,7 +58,7 @@ export const AVAILABLE_BLOCKS: Block[] = [
         type: ['value'], 
         label: 'Chain ID', 
         inputType: 'number',
-        placeholder: '1 (ETH), 137 (Polygon), 80002 (Amoy), 11155111 (Sepolia)'
+        placeholder: 'Enter 1, 137, 80002, or 11155111'
       },
       { 
         id: 'minTimestamp', 
@@ -71,7 +86,7 @@ export const AVAILABLE_BLOCKS: Block[] = [
         type: ['value'], 
         label: 'Chain ID', 
         inputType: 'number',
-        placeholder: '1 (ETH), 137 (Polygon), 80002 (Amoy), 11155111 (Sepolia)'
+        placeholder: 'Enter 1, 137, 80002, or 11155111'
       },
       { id: 'minBalance', type: ['value'], label: 'Min Balance', inputType: 'number' },
     ],

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 
 interface WalletButtonProps {
@@ -11,6 +11,52 @@ const WalletButton: React.FC<WalletButtonProps> = ({ onConnect }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState<string>('');
   const [error, setError] = useState<string>('');
+
+  // Try to connect automatically when component mounts
+  useEffect(() => {
+    const autoConnect = async () => {
+      if (window.ethereum) {
+        try {
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          
+          // Check if we already have access (i.e. user previously connected)
+          const accounts = await provider.listAccounts();
+          if (accounts.length > 0) {
+            setIsConnected(true);
+            setAddress(accounts[0]);
+            onConnect(provider);
+          }
+        } catch (err) {
+          console.error('Auto-connect error:', err);
+          // Don't show error for auto-connect failures
+        }
+      }
+    };
+
+    autoConnect();
+  }, [onConnect]);
+
+  // Listen for account changes
+  useEffect(() => {
+    if (window.ethereum) {
+      const handleAccountsChanged = (args: unknown[]) => {
+        const accounts = args as string[];
+        if (accounts.length > 0) {
+          setIsConnected(true);
+          setAddress(accounts[0]);
+        } else {
+          setIsConnected(false);
+          setAddress('');
+        }
+      };
+
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+
+      return () => {
+        window.ethereum?.removeListener('accountsChanged', handleAccountsChanged);
+      };
+    }
+  }, []);
 
   const handleConnect = async () => {
     setError('');

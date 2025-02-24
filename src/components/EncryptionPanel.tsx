@@ -4,17 +4,20 @@ import React, { useState } from 'react';
 import { encrypt, domains, conditions, ThresholdMessageKit } from '@nucypher/taco';
 import { ethers } from 'ethers';
 import { TacoCondition } from '../types/taco';
+import { SettingsConfig } from './Settings';
 
 interface EncryptionPanelProps {
   condition: TacoCondition | null;
   onMessageKitGenerated: (messageKit: ThresholdMessageKit, ciphertextString: string) => void;
   onError: (error: string) => void;
+  settings: SettingsConfig;
 }
 
 const EncryptionPanel: React.FC<EncryptionPanelProps> = ({ 
   condition,
   onMessageKitGenerated,
-  onError
+  onError,
+  settings
 }) => {
   const [message, setMessage] = useState('');
   const [isEncrypting, setIsEncrypting] = useState(false);
@@ -61,10 +64,10 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
 
       const messageKit = await encrypt(
         provider,
-        domains.TESTNET,
+        settings.domain,
         message,
         tacoCondition,
-        6,
+        settings.ritualId,
         signer
       );
 

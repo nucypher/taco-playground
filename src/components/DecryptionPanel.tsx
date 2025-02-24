@@ -5,17 +5,20 @@ import { conditions, decrypt, domains, initialize, ThresholdMessageKit } from '@
 import { EIP4361AuthProvider, USER_ADDRESS_PARAM_DEFAULT } from '@nucypher/taco-auth';
 import { ethers } from 'ethers';
 import CiphertextDisplay from './CiphertextDisplay';
+import { SettingsConfig } from './Settings';
 
 interface DecryptionPanelProps {
   messageKit: ThresholdMessageKit | null;
   ciphertext: string;
   onError: (error: string) => void;
+  settings: SettingsConfig;
 }
 
 const DecryptionPanel: React.FC<DecryptionPanelProps> = ({ 
   messageKit, 
   ciphertext,
-  onError 
+  onError,
+  settings
 }) => {
   const [decryptedMessage, setDecryptedMessage] = useState('');
   const [isDecrypting, setIsDecrypting] = useState(false);
@@ -138,7 +141,7 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({
 
       const decrypted = await decrypt(
         provider,
-        domains.TESTNET,
+        settings.domain,
         activeMessageKit,
         conditionContext // This will be undefined if there are no conditions, which is fine
       );

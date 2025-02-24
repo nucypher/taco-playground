@@ -9,9 +9,10 @@ import Header from './Header';
 
 interface MainLayoutProps {
   children: React.ReactNode;
+  onOpenSettings: () => void;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children, onOpenSettings }) => {
   const handleConnect = (provider: ethers.providers.Web3Provider) => {
     console.log('Connected to wallet', provider);
   };
@@ -19,7 +20,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col bg-black">
       {/* Full-width Header */}
-      <Header variant="playground" />
+      <Header variant="playground" onOpenSettings={onOpenSettings} />
 
       {/* Content Area with Sidebar */}
       <div className="flex flex-1">

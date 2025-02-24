@@ -12,15 +12,21 @@ import DecryptionPanel from './DecryptionPanel';
 import ErrorPanel from './ErrorPanel';
 import TacoProvider from './TacoProvider';
 import { TacoCondition } from '../types/taco';
-import { ThresholdMessageKit } from '@nucypher/taco';
+import { ThresholdMessageKit, domains } from '@nucypher/taco';
 import Link from 'next/link';
 import WalletButton from './WalletButton';
+import Settings, { SettingsConfig } from './Settings';
 
 const TacoPlayground: React.FC = () => {
   const [currentCondition, setCurrentCondition] = useState<TacoCondition | null>(null);
   const [messageKit, setMessageKit] = useState<ThresholdMessageKit | null>(null);
   const [ciphertext, setCiphertext] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<SettingsConfig>({
+    domain: domains.DEVNET,
+    ritualId: 27
+  });
 
   useEffect(() => {
     console.log('TacoPlayground currentCondition updated:', currentCondition);
@@ -53,7 +59,7 @@ const TacoPlayground: React.FC = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <TacoProvider>
-        <MainLayout>
+        <MainLayout onOpenSettings={() => setIsSettingsOpen(true)}>
           <div className="flex flex-col gap-3 max-w-[1600px] mx-auto">
             <WorkspaceLayout
               workspace={
@@ -70,6 +76,7 @@ const TacoPlayground: React.FC = () => {
                   condition={currentCondition}
                   onMessageKitGenerated={handleMessageKitGenerated}
                   onError={handleError}
+                  settings={settings}
                 />
               </div>
               <div className="bg-black rounded-lg">
@@ -77,11 +84,18 @@ const TacoPlayground: React.FC = () => {
                   messageKit={messageKit}
                   ciphertext={ciphertext}
                   onError={handleError}
+                  settings={settings}
                 />
               </div>
             </div>
           </div>
           <ErrorPanel error={error} onClear={handleClearError} />
+          <Settings
+            config={settings}
+            onConfigChange={setSettings}
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+          />
         </MainLayout>
       </TacoProvider>
     </DndProvider>

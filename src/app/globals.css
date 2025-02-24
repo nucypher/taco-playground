@@ -11,6 +11,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --taco-green: rgb(160, 251, 37);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -24,4 +25,8 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.text-taco {
+  color: var(--taco-green);
 }

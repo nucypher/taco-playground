@@ -354,35 +354,36 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
         ${block.type === 'condition' ? 'bg-black border border-white/10' : ''}
         ${block.type === 'operator' ? 'bg-black border border-white/10' : ''}
         ${block.type === 'value' ? 'bg-black border border-white/10' : ''}
-        text-white p-4 rounded-lg cursor-move
+        text-white rounded-lg cursor-move
         transition-all duration-200 ease-in-out
         hover:border-white/20 hover:shadow-[0_0_10px_rgba(255,255,255,0.05)]
         active:scale-[0.98]
         ${isDragging ? 'opacity-50 shadow-lg rotate-2' : 'opacity-100'}
       `}
     >
-      <div className="flex items-center gap-2">
-        {/* Block Type Indicator */}
-        <div className={`
-          w-2 h-2 rounded-full
-          ${block.type === 'condition' ? 'bg-purple-400' : ''}
-          ${block.type === 'operator' ? 'bg-blue-400' : ''}
-          ${block.type === 'value' ? 'bg-emerald-400' : ''}
-        `} />
-        <div className="font-medium tracking-wide text-sm">
-          {block.label}
-          {block.type === 'value' && block.value && (
-            <span className="ml-2 text-white/60 font-mono text-xs truncate max-w-[120px] inline-block align-bottom">
-              {block.value.length > 12 
-                ? `${block.value.slice(0, 6)}...${block.value.slice(-4)}`
-                : block.value}
-            </span>
-          )}
+      <div className="bg-white/5 border-b border-white/10 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <div className={`
+            w-2 h-2 rounded-full
+            ${block.type === 'condition' ? 'bg-purple-400' : ''}
+            ${block.type === 'operator' ? 'bg-blue-400' : ''}
+            ${block.type === 'value' ? 'bg-emerald-400' : ''}
+          `} />
+          <div className="font-medium text-sm">
+            {block.label}
+            {block.type === 'value' && block.value && (
+              <span className="ml-2 text-white/60 font-mono text-xs truncate max-w-[120px] inline-block align-bottom">
+                {block.value.length > 12 
+                  ? `${block.value.slice(0, 6)}...${block.value.slice(-4)}`
+                  : block.value}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
       {(block.type === 'condition' || block.type === 'operator') && block.inputs && block.inputs.length > 0 && (
-        <div className="mt-3 space-y-3">
+        <div className="p-4 space-y-3">
           {block.inputs.map((input) => (
             <div key={input.id} className="space-y-1.5">
               <label className="text-xs text-white/60 font-medium">

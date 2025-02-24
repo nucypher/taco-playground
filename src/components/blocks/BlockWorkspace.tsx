@@ -138,12 +138,14 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
 
   return (
     <div className="space-y-3 bg-black border border-white/5 rounded-lg p-6 flex flex-col flex-1">
-      <div className="flex justify-between items-center border-b border-white/5 pb-4">
-        <div className="flex items-center gap-2">
-          <svg className="w-4 h-4 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-              d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10-10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zm0 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-          </svg>
+      <div className="flex justify-between items-center border-b border-white/10 -mx-6 px-6 py-4 -mt-6 bg-white/5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-white/5 rounded-lg border border-white/10">
+            <svg className="w-5 h-5 text-taco" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10-10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zm0 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+            </svg>
+          </div>
           <h3 className="text-sm font-medium text-white tracking-wide uppercase">Workspace</h3>
         </div>
         {blocks.length > 0 && (
@@ -195,8 +197,10 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
             />
           ))}
           {blocks.length === 0 && (
-            <div className="text-center text-white/40 py-8">
-              Drag condition or operator blocks here
+            <div className="flex items-center justify-center h-full min-h-[200px]">
+              <div className="text-white/40 text-sm font-medium">
+                Drag condition or operator blocks here
+              </div>
             </div>
           )}
         </div>

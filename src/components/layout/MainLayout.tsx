@@ -17,19 +17,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen flex bg-black">
-      {/* Fixed Sidebar */}
-      <div className="w-96 fixed left-0 top-0 h-screen border-r border-white/10 bg-black">
-        <BlockSidebar />
-      </div>
+    <div className="min-h-screen flex flex-col bg-black">
+      {/* Full-width Header */}
+      <Header variant="playground" />
 
-      {/* Main Content */}
-      <div className="flex-1 ml-96">
-        <Header variant="playground" />
-        {/* Main Content Area */}
-        <main className="p-4 bg-black">
-          {children}
-        </main>
+      {/* Content Area with Sidebar */}
+      <div className="flex flex-1">
+        {/* Sidebar */}
+        <div className="w-96 border-r border-white/10 bg-black">
+          <BlockSidebar />
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1">
+          <main className="p-4 bg-black">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );

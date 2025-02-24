@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import WalletButton from '../WalletButton';
 import { ethers } from 'ethers';
+import Image from 'next/image';
 
 interface HeaderProps {
   variant?: 'playground' | 'decrypt';
@@ -13,17 +14,21 @@ const Header: React.FC<HeaderProps> = ({ variant = 'playground' }) => {
   };
 
   return (
-    <header className="bg-black border-b border-white/10 px-4 py-3">
-      <div className="max-w-[1600px] mx-auto flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-bold text-white tracking-tight">
-            {variant === 'playground' ? 'TACo Playground' : 'TACo Decryption'}
-          </h1>
-          {variant === 'playground' && (
-            <p className="text-sm text-white/60">
-              Build and test threshold access control conditions
-            </p>
-          )}
+    <header className="bg-black border-b border-white/10">
+      <div className="flex justify-between items-center px-6 py-3">
+        <div className="flex items-center gap-4">
+          <Image
+            src="/TACo-logo.avif"
+            alt="TACo Logo"
+            width={32}
+            height={32}
+            className="rounded"
+          />
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">
+              {variant === 'playground' ? 'TACo Playground' : 'TACo Decryption'}
+            </h1>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           {variant === 'playground' ? (

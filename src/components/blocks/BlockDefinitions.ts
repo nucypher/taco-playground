@@ -46,6 +46,48 @@ export const AVAILABLE_BLOCKS: Block[] = [
     }
   },
 
+  // Preset Values
+  {
+    id: 'chain-amoy',
+    type: 'value',
+    category: BLOCK_CATEGORIES.VALUES,
+    label: 'Amoy Chain ID (80002)',
+    value: '80002',
+    properties: {
+      type: 'number'
+    }
+  },
+  {
+    id: 'chain-mainnet',
+    type: 'value',
+    category: BLOCK_CATEGORIES.VALUES,
+    label: 'Ethereum Chain ID (1)',
+    value: '1',
+    properties: {
+      type: 'number'
+    }
+  },
+  {
+    id: 'chain-polygon',
+    type: 'value',
+    category: BLOCK_CATEGORIES.VALUES,
+    label: 'Polygon Chain ID (137)',
+    value: '137',
+    properties: {
+      type: 'number'
+    }
+  },
+  {
+    id: 'contract-address',
+    type: 'value',
+    category: BLOCK_CATEGORIES.VALUES,
+    label: 'Contract Address (0x8a6d...fa5c)',
+    value: '0x8a6d59c1c0449ccf26d87bd52be029ec4a5afa5c',
+    properties: {
+      type: 'string'
+    }
+  },
+
   // Time Conditions
   {
     id: 'timestamp',

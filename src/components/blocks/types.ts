@@ -7,6 +7,7 @@ export interface DragItem {
   label: string;
   inputs?: BlockInput[];
   properties?: Record<string, unknown>;
+  value?: string;
   isTemplate: boolean;
 }
 

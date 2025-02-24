@@ -31,7 +31,54 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
         const connectedBlock = parentInput.connected;
         const targetInput = connectedBlock.inputs?.find((input: BlockInput) => input.id === inputId);
         if (targetInput) {
-          // Create a new block from the dropped item
+          if (item.type === 'value') {
+            // For value blocks, just set the value directly
+            targetInput.value = item.value;
+          } else {
+            // Create a new block from the dropped item
+            const droppedBlock = JSON.parse(JSON.stringify(item)) as Block;
+            droppedBlock.isTemplate = false;
+
+            // Initialize values for all inputs in the dropped block
+            if (droppedBlock.inputs) {
+              droppedBlock.inputs = droppedBlock.inputs.map((input: BlockInput) => ({
+                ...input,
+                value: input.value || '',
+                inputType: input.inputType || 'text'
+              }));
+            }
+
+            // Connect the dropped block
+            targetInput.connected = droppedBlock;
+
+            // If this is an operator block, add a new input slot if needed
+            if (connectedBlock.type === 'operator') {
+              const connectedCount = connectedBlock.inputs?.filter((input: BlockInput) => input.connected).length || 0;
+              const maxInputs = connectedBlock.properties?.maxInputs;
+              const lastInput = connectedBlock.inputs?.[connectedBlock.inputs.length - 1];
+
+              if (lastInput?.id === inputId && (!maxInputs || connectedCount < maxInputs)) {
+                connectedBlock.inputs.push({
+                  id: `condition-${Date.now()}`,
+                  type: ['condition', 'operator'],
+                  label: 'Add Condition'
+                });
+              }
+            }
+          }
+
+          // Update the parent input with the modified connected block
+          parentInput.connected = connectedBlock;
+          onBlockUpdate(updatedBlock);
+        }
+      }
+    } else if (block.type === 'operator') {
+      const input = updatedBlock.inputs?.find((input: BlockInput) => input.id === inputId);
+      if (input) {
+        if (item.type === 'value') {
+          // For value blocks, just set the value directly
+          input.value = item.value;
+        } else if (!input.connected) {
           const droppedBlock = JSON.parse(JSON.stringify(item)) as Block;
           droppedBlock.isTemplate = false;
 
@@ -44,61 +91,32 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
             }));
           }
 
-          // Connect the dropped block
-          targetInput.connected = droppedBlock;
+          input.connected = droppedBlock;
 
-          // If this is an operator block, add a new input slot if needed
-          if (connectedBlock.type === 'operator') {
-            const connectedCount = connectedBlock.inputs?.filter((input: BlockInput) => input.connected).length || 0;
-            const maxInputs = connectedBlock.properties?.maxInputs;
-            const lastInput = connectedBlock.inputs?.[connectedBlock.inputs.length - 1];
+          const connectedCount = updatedBlock.inputs?.filter((input: BlockInput) => input.connected).length || 0;
+          input.label = `Condition ${connectedCount}`;
 
-            if (lastInput?.id === inputId && (!maxInputs || connectedCount < maxInputs)) {
-              connectedBlock.inputs.push({
-                id: `condition-${Date.now()}`,
-                type: ['condition', 'operator'],
-                label: 'Add Condition'
-              });
-            }
+          const lastInput = updatedBlock.inputs?.[updatedBlock.inputs.length - 1];
+          const maxInputs = updatedBlock.properties?.maxInputs;
+          
+          // Only add new input slot if we haven't reached maxInputs (if specified)
+          if (lastInput?.id === inputId && 
+              (!maxInputs || connectedCount < maxInputs)) {
+            updatedBlock.inputs.push({
+              id: `condition-${Date.now()}`,
+              type: ['condition', 'operator'],
+              label: 'Add Condition'
+            });
           }
-
-          // Update the parent input with the modified connected block
-          parentInput.connected = connectedBlock;
-          onBlockUpdate(updatedBlock);
         }
+        onBlockUpdate(updatedBlock);
       }
-    } else if (block.type === 'operator') {
+    } else if (block.type === 'condition') {
+      // Handle direct drops into condition inputs
       const input = updatedBlock.inputs?.find((input: BlockInput) => input.id === inputId);
-      if (input && !input.connected) {
-        const droppedBlock = JSON.parse(JSON.stringify(item)) as Block;
-        droppedBlock.isTemplate = false;
-
-        // Initialize values for all inputs in the dropped block
-        if (droppedBlock.inputs) {
-          droppedBlock.inputs = droppedBlock.inputs.map((input: BlockInput) => ({
-            ...input,
-            value: input.value || '',
-            inputType: input.inputType || 'text'
-          }));
-        }
-
-        input.connected = droppedBlock;
-
-        const connectedCount = updatedBlock.inputs?.filter((input: BlockInput) => input.connected).length || 0;
-        input.label = `Condition ${connectedCount}`;
-
-        const lastInput = updatedBlock.inputs?.[updatedBlock.inputs.length - 1];
-        const maxInputs = updatedBlock.properties?.maxInputs;
-        
-        // Only add new input slot if we haven't reached maxInputs (if specified)
-        if (lastInput?.id === inputId && 
-            (!maxInputs || connectedCount < maxInputs)) {
-          updatedBlock.inputs.push({
-            id: `condition-${Date.now()}`,
-            type: ['condition', 'operator'],
-            label: 'Add Condition'
-          });
-        }
+      if (input && item.type === 'value') {
+        // For value blocks, just set the value directly
+        input.value = item.value;
         onBlockUpdate(updatedBlock);
       }
     }
@@ -115,6 +133,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
         label: block.label,
         inputs: block.inputs,
         properties: block.properties,
+        value: block.value,
         isTemplate: !isWorkspaceBlock,
       };
       return newBlock;
@@ -294,18 +313,25 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
                   <label className="text-xs text-white/60 font-medium">
                     {input.label}
                   </label>
-                  <input
-                    type={input.inputType || 'text'}
-                    className="w-full px-3 py-2 text-sm bg-white/5 rounded-lg
-                      border border-white/5 text-white placeholder-white/30
-                      transition-all duration-200
-                      focus:border-white/20 focus:ring-1 focus:ring-white/10
-                      hover:border-white/10"
-                    value={input.value || ''}
-                    onChange={(e) => handleValueChange(input.id, e, parentPath)}
-                    onClick={(e) => e.stopPropagation()}
-                    placeholder={input.placeholder || `Enter ${input.label.toLowerCase()}...`}
-                  />
+                  <DropTarget
+                    inputId={input.id}
+                    isWorkspaceBlock={isWorkspaceBlock}
+                    onDrop={handleDrop}
+                    className="flex-1"
+                  >
+                    <input
+                      type={input.inputType || 'text'}
+                      className="w-full px-3 py-2 text-sm bg-white/5 rounded-lg
+                        border border-white/5 text-white placeholder-white/30
+                        transition-all duration-200
+                        focus:border-white/20 focus:ring-1 focus:ring-white/10
+                        hover:border-white/10"
+                      value={input.value || ''}
+                      onChange={(e) => handleValueChange(input.id, e)}
+                      onClick={(e) => e.stopPropagation()}
+                      placeholder={input.placeholder || `Enter ${input.label.toLowerCase()}...`}
+                    />
+                  </DropTarget>
                 </div>
               ))}
             </div>
@@ -327,6 +353,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
         relative
         ${block.type === 'condition' ? 'bg-black border border-white/10' : ''}
         ${block.type === 'operator' ? 'bg-black border border-white/10' : ''}
+        ${block.type === 'value' ? 'bg-black border border-white/10' : ''}
         text-white p-4 rounded-lg cursor-move
         transition-all duration-200 ease-in-out
         hover:border-white/20 hover:shadow-[0_0_10px_rgba(255,255,255,0.05)]
@@ -340,8 +367,18 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
           w-2 h-2 rounded-full
           ${block.type === 'condition' ? 'bg-purple-400' : ''}
           ${block.type === 'operator' ? 'bg-blue-400' : ''}
+          ${block.type === 'value' ? 'bg-emerald-400' : ''}
         `} />
-        <div className="font-medium tracking-wide text-sm">{block.label}</div>
+        <div className="font-medium tracking-wide text-sm">
+          {block.label}
+          {block.type === 'value' && block.value && (
+            <span className="ml-2 text-white/60 font-mono text-xs truncate max-w-[120px] inline-block align-bottom">
+              {block.value.length > 12 
+                ? `${block.value.slice(0, 6)}...${block.value.slice(-4)}`
+                : block.value}
+            </span>
+          )}
+        </div>
       </div>
 
       {(block.type === 'condition' || block.type === 'operator') && block.inputs && block.inputs.length > 0 && (
@@ -386,18 +423,25 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
                 </DropTarget>
               ) : (
                 <div className="flex-1">
-                  <input
-                    type={input.inputType || 'text'}
-                    className="w-full px-3 py-2 text-sm bg-white/5 rounded-lg
-                      border border-white/5 text-white placeholder-white/30
-                      transition-all duration-200
-                      focus:border-white/20 focus:ring-1 focus:ring-white/10
-                      hover:border-white/10"
-                    value={input.value || ''}
-                    onChange={(e) => handleValueChange(input.id, e)}
-                    onClick={(e) => e.stopPropagation()}
-                    placeholder={input.placeholder || `Enter ${input.label.toLowerCase()}...`}
-                  />
+                  <DropTarget
+                    inputId={input.id}
+                    isWorkspaceBlock={isWorkspaceBlock}
+                    onDrop={handleDrop}
+                    className="flex-1"
+                  >
+                    <input
+                      type={input.inputType || 'text'}
+                      className="w-full px-3 py-2 text-sm bg-white/5 rounded-lg
+                        border border-white/5 text-white placeholder-white/30
+                        transition-all duration-200
+                        focus:border-white/20 focus:ring-1 focus:ring-white/10
+                        hover:border-white/10"
+                      value={input.value || ''}
+                      onChange={(e) => handleValueChange(input.id, e)}
+                      onClick={(e) => e.stopPropagation()}
+                      placeholder={input.placeholder || `Enter ${input.label.toLowerCase()}...`}
+                    />
+                  </DropTarget>
                 </div>
               )}
             </div>

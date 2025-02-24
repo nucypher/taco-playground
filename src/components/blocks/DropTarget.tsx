@@ -23,6 +23,13 @@ export const DropTarget: React.FC<DropTargetProps> = ({
     accept: 'block',
     canDrop: (item: DragItem) => {
       if (!isWorkspaceBlock) return false;
+      
+      // For value inputs, only accept value blocks
+      if (inputId.includes('chain') || inputId.includes('contractAddress')) {
+        return item.type === 'value';
+      }
+      
+      // For operator inputs, accept conditions and operators
       return item.type === 'condition' || item.type === 'operator';
     },
     drop: (item: DragItem) => {
@@ -46,9 +53,9 @@ export const DropTarget: React.FC<DropTargetProps> = ({
       data-parent-input-id={parentInputId}
       className={`
         ${className}
-        ${isOver ? 'border-green-400 bg-green-900/30 scale-105' : ''}
-        ${!canDrop ? 'border-red-400 bg-red-900/30' : ''}
-        ${canDrop && !isOver ? 'border-blue-400 border-dashed' : ''}
+        ${isOver ? 'border-white/20 bg-white/10 scale-[1.02]' : ''}
+        ${!canDrop ? 'border-white/5 bg-white/5' : ''}
+        ${canDrop && !isOver ? 'border-white/10 border-dashed' : ''}
       `}
     >
       {children}

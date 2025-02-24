@@ -16,6 +16,11 @@ interface DragItem extends Omit<Block, 'id'> {
   isTemplate: boolean;
 }
 
+interface DropResult {
+  handled?: boolean;
+  dropped?: boolean;
+}
+
 const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) => {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [dropError, setDropError] = useState<string>('');
@@ -37,33 +42,20 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
     // Convert to string for comparison
     const jsonString = JSON.stringify(json);
     
-    console.log('BlockWorkspace: Generating JSON', {
-      blocks,
-      json,
-      jsonString,
-      prevJson: prevJsonRef.current
-    });
-    
     // Only update if the JSON has actually changed
     if (jsonString !== prevJsonRef.current) {
-      console.log('BlockWorkspace: JSON changed, updating');
       prevJsonRef.current = jsonString;
       onConditionChange(json);
     }
   }, [blocks, onConditionChange]);
 
   const handleBlockUpdate = useCallback((updatedBlock: Block) => {
-    console.log('BlockWorkspace: Handling block update', {
-      updatedBlock,
-      currentBlocks: blocks
-    });
-    
     setBlocks(prev => 
       prev.map(block => 
         block.id === updatedBlock.id ? updatedBlock : block
       )
     );
-  }, [blocks]);
+  }, []);
 
   const handleClear = () => {
     setBlocks([]);
@@ -87,10 +79,31 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
     ).length;
   };
 
-  const [{ isOver, canDrop }, drop] = useDrop(() => ({
+  const elementRef = useRef<HTMLDivElement>(null);
+
+  const [{ isOver, canDrop }, drop] = useDrop<DragItem, DropResult, { isOver: boolean; canDrop: boolean }>(() => ({
     accept: 'block',
-    canDrop: (item: DragItem) => {
-      // Always allow operator blocks
+    canDrop: (item: DragItem, monitor) => {
+      // Check if the drop was already handled by a nested target
+      const dropResult = monitor.getDropResult<DropResult>();
+      if (dropResult?.handled) {
+        return false;
+      }
+
+      // Only allow drops directly on the workspace (not on nested drop targets)
+      const isDirectDrop = monitor.isOver({ shallow: true });
+      if (!isDirectDrop) return false;
+
+      // Check if we're dropping inside an operator or condition
+      const target = monitor.getClientOffset();
+      if (target) {
+        const element = document.elementFromPoint(target.x, target.y);
+        if (element?.closest('[data-block-type="operator"], [data-block-type="condition"]')) {
+          return false;
+        }
+      }
+
+      // Always allow operator blocks at the root level
       if (item.type === 'operator' && item.isTemplate) {
         return true;
       }
@@ -108,6 +121,26 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
       return false;
     },
     drop: (item: DragItem, monitor) => {
+      // Check if the drop was handled by a nested target
+      const dropResult = monitor.getDropResult<DropResult>();
+      if (dropResult?.handled) {
+        return dropResult;
+      }
+
+      // Only handle drops directly on the workspace
+      if (!monitor.isOver({ shallow: true })) {
+        return;
+      }
+
+      // Check if we're dropping inside an operator or condition
+      const target = monitor.getClientOffset();
+      if (target) {
+        const element = document.elementFromPoint(target.x, target.y);
+        if (element?.closest('[data-block-type="operator"], [data-block-type="condition"]')) {
+          return;
+        }
+      }
+
       if (monitor.canDrop() && item.isTemplate) {
         setBlocks(prev => {
           // Create a deep copy of the block to ensure properties are preserved
@@ -123,17 +156,16 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
           
           return [...prev, newBlock];
         });
+        
+        return { dropped: true, handled: true };
       }
-      
-      return { dropped: true };
     },
     collect: monitor => ({
-      isOver: monitor.isOver(),
+      isOver: monitor.isOver({ shallow: true }),
       canDrop: monitor.canDrop(),
     }),
   }), [blocks]);
 
-  const elementRef = useRef<HTMLDivElement>(null);
   drop(elementRef);
 
   return (
@@ -206,7 +238,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
         </div>
       </div>
 
-      {/* Error Message */}
       {dropError && (
         <div className="mt-3 p-3 bg-red-500/5 border border-red-500/20 rounded-lg
           text-red-400 text-sm font-medium animate-fade-in">

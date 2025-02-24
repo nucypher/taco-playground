@@ -34,42 +34,47 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
           if (item.type === 'value') {
             // For value blocks, just set the value directly
             targetInput.value = item.value;
-          } else {
-            // Create a new block from the dropped item
-            const droppedBlock = JSON.parse(JSON.stringify(item)) as Block;
-            droppedBlock.isTemplate = false;
+            // Update the parent input with the modified connected block
+            parentInput.connected = connectedBlock;
+            onBlockUpdate(updatedBlock);
+            return { handled: true }; // Return early after handling value drop
+          }
 
-            // Initialize values for all inputs in the dropped block
-            if (droppedBlock.inputs) {
-              droppedBlock.inputs = droppedBlock.inputs.map((input: BlockInput) => ({
-                ...input,
-                value: input.value || '',
-                inputType: input.inputType || 'text'
-              }));
-            }
+          // Create a new block from the dropped item
+          const droppedBlock = JSON.parse(JSON.stringify(item)) as Block;
+          droppedBlock.isTemplate = false;
 
-            // Connect the dropped block
-            targetInput.connected = droppedBlock;
+          // Initialize values for all inputs in the dropped block
+          if (droppedBlock.inputs) {
+            droppedBlock.inputs = droppedBlock.inputs.map((input: BlockInput) => ({
+              ...input,
+              value: input.value || '',
+              inputType: input.inputType || 'text'
+            }));
+          }
 
-            // If this is an operator block, add a new input slot if needed
-            if (connectedBlock.type === 'operator') {
-              const connectedCount = connectedBlock.inputs?.filter((input: BlockInput) => input.connected).length || 0;
-              const maxInputs = connectedBlock.properties?.maxInputs;
-              const lastInput = connectedBlock.inputs?.[connectedBlock.inputs.length - 1];
+          // Connect the dropped block
+          targetInput.connected = droppedBlock;
 
-              if (lastInput?.id === inputId && (!maxInputs || connectedCount < maxInputs)) {
-                connectedBlock.inputs.push({
-                  id: `condition-${Date.now()}`,
-                  type: ['condition', 'operator'],
-                  label: 'Add Condition'
-                });
-              }
+          // If this is an operator block, add a new input slot if needed
+          if (connectedBlock.type === 'operator') {
+            const connectedCount = connectedBlock.inputs?.filter((input: BlockInput) => input.connected).length || 0;
+            const maxInputs = connectedBlock.properties?.maxInputs;
+            const lastInput = connectedBlock.inputs?.[connectedBlock.inputs.length - 1];
+
+            if (lastInput?.id === inputId && (!maxInputs || connectedCount < maxInputs)) {
+              connectedBlock.inputs.push({
+                id: `condition-${Date.now()}`,
+                type: ['condition', 'operator'],
+                label: 'Add Condition'
+              });
             }
           }
 
           // Update the parent input with the modified connected block
           parentInput.connected = connectedBlock;
           onBlockUpdate(updatedBlock);
+          return { handled: true }; // Return after handling nested drop
         }
       }
     } else if (block.type === 'operator') {
@@ -78,7 +83,11 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
         if (item.type === 'value') {
           // For value blocks, just set the value directly
           input.value = item.value;
-        } else if (!input.connected) {
+          onBlockUpdate(updatedBlock);
+          return { handled: true }; // Return early after handling value drop
+        }
+
+        if (!input.connected) {
           const droppedBlock = JSON.parse(JSON.stringify(item)) as Block;
           droppedBlock.isTemplate = false;
 
@@ -108,8 +117,9 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
               label: 'Add Condition'
             });
           }
+          onBlockUpdate(updatedBlock);
+          return { handled: true }; // Return after handling operator drop
         }
-        onBlockUpdate(updatedBlock);
       }
     } else if (block.type === 'condition') {
       // Handle direct drops into condition inputs
@@ -118,6 +128,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
         // For value blocks, just set the value directly
         input.value = item.value;
         onBlockUpdate(updatedBlock);
+        return { handled: true }; // Return early after handling value drop
       }
     }
   }, [block, onBlockUpdate]);
@@ -162,13 +173,6 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
     const value = e.target.value;
     const updatedBlock = JSON.parse(JSON.stringify(block));
     
-    console.log('Handling value change:', {
-      inputId,
-      value,
-      parentPath,
-      currentBlock: block
-    });
-
     // Helper function to find and update nested input following a path
     const findAndUpdateInput = (currentBlock: Block, targetInputId: string, path: string[]): boolean => {
       if (path.length === 0) {
@@ -241,109 +245,8 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
   };
 
   const renderConnectedBlock = (connectedBlock: Block, parentPath: string[]) => {
-    if (connectedBlock.type === 'operator') {
-      // Render nested operator block
-      return (
-        <div className="mt-2 bg-black border border-white/5 rounded-lg p-3
-          transition-all duration-200 hover:border-white/10">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-blue-400" />
-            <div className="font-medium text-sm">{connectedBlock.label}</div>
-          </div>
-          {connectedBlock.inputs && connectedBlock.inputs.length > 0 && (
-            <div className="mt-3 space-y-3">
-              {connectedBlock.inputs.map((input) => (
-                <div key={input.id} className="space-y-1.5">
-                  <label className="text-xs text-white/60 font-medium">
-                    {input.label}
-                  </label>
-                  <DropTarget
-                    inputId={input.id}
-                    parentInputId={parentPath[parentPath.length - 1]}
-                    isWorkspaceBlock={isWorkspaceBlock}
-                    onDrop={handleDrop}
-                    className="flex-1 px-3 py-2 text-sm rounded-lg
-                      transition-all duration-200 ease-in-out
-                      bg-white/5 border border-white/10
-                      hover:border-white/20"
-                  >
-                    {input.connected ? (
-                      <div className="flex justify-between items-center">
-                        <div className="flex-1">
-                          {renderConnectedBlock(input.connected, [...parentPath, input.id])}
-                        </div>
-                        {isWorkspaceBlock && (
-                          <button
-                            onClick={() => handleRemoveCondition(input.id)}
-                            className="ml-2 p-1 rounded-full text-white/40 hover:text-white/80
-                              hover:bg-white/10 transition-colors duration-200"
-                          >
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-white/40 text-sm">
-                        Drop condition or operator here
-                      </div>
-                    )}
-                  </DropTarget>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    if (connectedBlock.type === 'condition') {
-      return (
-        <div className="mt-2 bg-black border border-white/5 rounded-lg p-3
-          transition-all duration-200 hover:border-white/10">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-purple-400" />
-            <div className="font-medium text-sm">{connectedBlock.label}</div>
-          </div>
-          {connectedBlock.inputs && connectedBlock.inputs.length > 0 && (
-            <div className="mt-3 space-y-3">
-              {connectedBlock.inputs.map((input) => (
-                <div key={input.id} className="space-y-1.5">
-                  <label className="text-xs text-white/60 font-medium">
-                    {input.label}
-                  </label>
-                  <DropTarget
-                    inputId={input.id}
-                    isWorkspaceBlock={isWorkspaceBlock}
-                    onDrop={handleDrop}
-                    className="flex-1"
-                  >
-                    <input
-                      type={input.inputType || 'text'}
-                      className="w-full px-3 py-2 text-sm bg-white/5 rounded-lg
-                        border border-white/5 text-white placeholder-white/30
-                        transition-all duration-200
-                        focus:border-white/20 focus:ring-1 focus:ring-white/10
-                        hover:border-white/10"
-                      value={input.value || ''}
-                      onChange={(e) => handleValueChange(input.id, e)}
-                      onClick={(e) => e.stopPropagation()}
-                      placeholder={input.placeholder || `Enter ${input.label.toLowerCase()}...`}
-                    />
-                  </DropTarget>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      );
-    }
-    return (
-      <div className="text-sm text-white/80">
-        {connectedBlock.label}
-      </div>
-    );
+    // Don't render any blocks here - they are all handled in the main render
+    return null;
   };
 
   return (
@@ -351,104 +254,100 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
       ref={combineRefs(elementRef, drag)}
       className={`
         relative
-        ${block.type === 'condition' ? 'bg-black border border-white/10' : ''}
-        ${block.type === 'operator' ? 'bg-black border border-white/10' : ''}
-        ${block.type === 'value' ? 'bg-black border border-white/10' : ''}
-        text-white rounded-lg cursor-move
-        transition-all duration-200 ease-in-out
-        hover:border-white/20 hover:shadow-[0_0_10px_rgba(255,255,255,0.05)]
-        active:scale-[0.98]
-        ${isDragging ? 'opacity-50 shadow-lg rotate-2' : 'opacity-100'}
+        ${isDragging ? 'opacity-50' : ''}
+        ${isWorkspaceBlock ? 'cursor-move' : 'cursor-grab'}
       `}
+      data-block-type={block.type}
     >
-      <div className="bg-white/5 border-b border-white/10 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <div className={`
-            w-2 h-2 rounded-full
-            ${block.type === 'condition' ? 'bg-purple-400' : ''}
-            ${block.type === 'operator' ? 'bg-blue-400' : ''}
-            ${block.type === 'value' ? 'bg-emerald-400' : ''}
-          `} />
-          <div className="font-medium text-sm">
-            {block.label}
-            {block.type === 'value' && block.value && (
-              <span className="ml-2 text-white/60 font-mono text-xs truncate max-w-[120px] inline-block align-bottom">
-                {block.value.length > 12 
-                  ? `${block.value.slice(0, 6)}...${block.value.slice(-4)}`
-                  : block.value}
-              </span>
-            )}
+      <div className={`
+        bg-black/30 border border-white/5 rounded-lg p-3
+        transition-all duration-200 hover:border-white/10
+        ${block.type === 'operator' ? 'bg-opacity-30' : ''}
+      `}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className={`
+              w-1.5 h-1.5 rounded-full
+              ${block.type === 'condition' ? 'bg-purple-400/70' : ''}
+              ${block.type === 'operator' ? 'bg-blue-400/70' : ''}
+              ${block.type === 'value' ? 'bg-green-400/70' : ''}
+            `} />
+            <span className="text-sm text-white/70">{block.label}</span>
           </div>
         </div>
-      </div>
 
-      {(block.type === 'condition' || block.type === 'operator') && block.inputs && block.inputs.length > 0 && (
-        <div className="p-4 space-y-3">
-          {block.inputs.map((input) => (
-            <div key={input.id} className="space-y-1.5">
-              <label className="text-xs text-white/60 font-medium">
-                {input.label}
-              </label>
-              {block.type === 'operator' ? (
-                <DropTarget
-                  inputId={input.id}
-                  isWorkspaceBlock={isWorkspaceBlock}
-                  onDrop={handleDrop}
-                  className="flex-1 px-3 py-2 text-sm rounded-lg
-                    transition-all duration-200 ease-in-out
-                    bg-white/5 border border-white/10
-                    hover:border-white/20"
-                >
-                  {input.connected ? (
-                    <div className="flex justify-between items-center">
-                      <div className="flex-1">
-                        {renderConnectedBlock(input.connected, [input.id])}
-                      </div>
-                      {isWorkspaceBlock && (
-                        <button
-                          onClick={() => handleRemoveCondition(input.id)}
-                          className="ml-2 p-1 rounded-full text-white/40 hover:text-white/80
-                            hover:bg-white/10 transition-colors duration-200"
-                        >
-                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
+        {block.inputs && block.inputs.length > 0 && (
+          <div className="mt-3 space-y-3 pt-2 border-t border-white/5">
+            {block.inputs.map((input: BlockInput, index) => {
+              if (input.type?.includes('operator') || input.type?.includes('condition')) {
+                return (
+                  <div key={input.id} className={`
+                    ${index !== 0 ? 'pt-3 border-t border-white/5' : ''}
+                  `}>
+                    <DropTarget
+                      inputId={input.id}
+                      isWorkspaceBlock={isWorkspaceBlock}
+                      onDrop={handleDrop}
+                      className="border rounded-lg transition-all duration-200"
+                    >
+                      {input.connected ? (
+                        <div className="relative group">
+                          <DraggableBlock
+                            block={input.connected}
+                            isWorkspaceBlock={isWorkspaceBlock}
+                            onBlockUpdate={(updatedBlock) => {
+                              const newBlock = JSON.parse(JSON.stringify(block));
+                              const targetInput = newBlock.inputs?.find((i: BlockInput) => i.id === input.id);
+                              if (targetInput) {
+                                targetInput.connected = updatedBlock;
+                                onBlockUpdate?.(newBlock);
+                              }
+                            }}
+                          />
+                          {isWorkspaceBlock && (
+                            <button
+                              onClick={() => handleRemoveCondition(input.id)}
+                              className="absolute -right-1.5 -top-1.5 p-1 bg-red-500/70 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                            >
+                              <svg className="w-2.5 h-2.5 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="p-2.5 text-sm text-white/30">{input.label}</div>
                       )}
+                    </DropTarget>
+                  </div>
+                );
+              }
+
+              // Only render input fields for direct condition blocks
+              if (block.type === 'condition') {
+                return (
+                  <div key={input.id} className={`
+                    ${index !== 0 ? 'pt-3 border-t border-white/5' : ''}
+                  `}>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-xs text-white/50">{input.label}</span>
+                      <input
+                        type={input.inputType || 'text'}
+                        value={input.value || ''}
+                        onChange={(e) => handleValueChange(input.id, e)}
+                        className="w-full px-2 py-1.5 text-sm bg-black/30 border border-white/5 rounded 
+                          focus:outline-none focus:border-white/20 placeholder-white/20"
+                        placeholder={`Enter ${input.label.toLowerCase()}`}
+                      />
                     </div>
-                  ) : (
-                    <div className="text-white/40 text-sm">
-                      Drop condition or operator here
-                    </div>
-                  )}
-                </DropTarget>
-              ) : (
-                <div className="flex-1">
-                  <DropTarget
-                    inputId={input.id}
-                    isWorkspaceBlock={isWorkspaceBlock}
-                    onDrop={handleDrop}
-                    className="flex-1"
-                  >
-                    <input
-                      type={input.inputType || 'text'}
-                      className="w-full px-3 py-2 text-sm bg-white/5 rounded-lg
-                        border border-white/5 text-white placeholder-white/30
-                        transition-all duration-200
-                        focus:border-white/20 focus:ring-1 focus:ring-white/10
-                        hover:border-white/10"
-                      value={input.value || ''}
-                      onChange={(e) => handleValueChange(input.id, e)}
-                      onClick={(e) => e.stopPropagation()}
-                      placeholder={input.placeholder || `Enter ${input.label.toLowerCase()}...`}
-                    />
-                  </DropTarget>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+                  </div>
+                );
+              }
+              return null;
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

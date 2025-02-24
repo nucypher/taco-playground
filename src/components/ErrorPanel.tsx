@@ -29,9 +29,9 @@ const ErrorPanel: React.FC<ErrorPanelProps> = ({ error, onClear }) => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-red-500/20 p-4">
+    <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-red-500/10 p-4">
       <div className="max-w-[1600px] mx-auto">
-        <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-4">
+        <div className="bg-red-500/5 border border-red-500/10 rounded-lg p-4">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
               <svg 

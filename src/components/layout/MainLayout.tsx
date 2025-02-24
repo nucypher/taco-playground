@@ -1,9 +1,11 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import BlockSidebar from '../blocks/BlockSidebar';
 import WalletButton from '../WalletButton';
 import { ethers } from 'ethers';
+import Header from './Header';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -23,19 +25,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
       {/* Main Content */}
       <div className="flex-1 ml-96">
-        {/* Header */}
-        <header className="bg-black border-b border-white/10 px-4 py-3">
-          <div className="max-w-[1600px] mx-auto flex justify-between items-center">
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">TACo Playground</h1>
-              <p className="text-sm text-white/60">
-                Build and test threshold access control conditions
-              </p>
-            </div>
-            <WalletButton onConnect={handleConnect} />
-          </div>
-        </header>
-
+        <Header variant="playground" />
         {/* Main Content Area */}
         <main className="p-4 bg-black">
           {children}

@@ -225,8 +225,8 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
     if (connectedBlock.type === 'operator') {
       // Render nested operator block
       return (
-        <div className="mt-2 bg-black border border-white/10 rounded-lg p-3
-          transition-all duration-200 hover:border-white/20">
+        <div className="mt-2 bg-black border border-white/5 rounded-lg p-3
+          transition-all duration-200 hover:border-white/10">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-blue-400" />
             <div className="font-medium text-sm">{connectedBlock.label}</div>
@@ -281,8 +281,8 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
 
     if (connectedBlock.type === 'condition') {
       return (
-        <div className="mt-2 bg-black border border-white/10 rounded-lg p-3
-          transition-all duration-200 hover:border-white/20">
+        <div className="mt-2 bg-black border border-white/5 rounded-lg p-3
+          transition-all duration-200 hover:border-white/10">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-purple-400" />
             <div className="font-medium text-sm">{connectedBlock.label}</div>
@@ -297,10 +297,10 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
                   <input
                     type={input.inputType || 'text'}
                     className="w-full px-3 py-2 text-sm bg-white/5 rounded-lg
-                      border border-white/10 text-white placeholder-white/30
+                      border border-white/5 text-white placeholder-white/30
                       transition-all duration-200
-                      focus:border-white/30 focus:ring-1 focus:ring-white/20
-                      hover:border-white/20"
+                      focus:border-white/20 focus:ring-1 focus:ring-white/10
+                      hover:border-white/10"
                     value={input.value || ''}
                     onChange={(e) => handleValueChange(input.id, e, parentPath)}
                     onClick={(e) => e.stopPropagation()}
@@ -325,13 +325,13 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
       ref={combineRefs(elementRef, drag)}
       className={`
         relative
-        ${block.type === 'condition' ? 'bg-black border border-white/20' : ''}
-        ${block.type === 'operator' ? 'bg-black border border-white/20' : ''}
+        ${block.type === 'condition' ? 'bg-black border border-white/10' : ''}
+        ${block.type === 'operator' ? 'bg-black border border-white/10' : ''}
         text-white p-4 rounded-lg cursor-move
         transition-all duration-200 ease-in-out
-        hover:border-white/40 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]
+        hover:border-white/20 hover:shadow-[0_0_10px_rgba(255,255,255,0.05)]
         active:scale-[0.98]
-        ${isDragging ? 'opacity-50 shadow-2xl rotate-2' : 'opacity-100'}
+        ${isDragging ? 'opacity-50 shadow-lg rotate-2' : 'opacity-100'}
       `}
     >
       <div className="flex items-center gap-2">
@@ -389,10 +389,10 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
                   <input
                     type={input.inputType || 'text'}
                     className="w-full px-3 py-2 text-sm bg-white/5 rounded-lg
-                      border border-white/10 text-white placeholder-white/30
+                      border border-white/5 text-white placeholder-white/30
                       transition-all duration-200
-                      focus:border-white/30 focus:ring-1 focus:ring-white/20
-                      hover:border-white/20"
+                      focus:border-white/20 focus:ring-1 focus:ring-white/10
+                      hover:border-white/10"
                     value={input.value || ''}
                     onChange={(e) => handleValueChange(input.id, e)}
                     onClick={(e) => e.stopPropagation()}

@@ -137,18 +137,22 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
   drop(elementRef);
 
   return (
-    <div className="space-y-3 bg-black border border-white/10 rounded-lg p-6 flex flex-col flex-1">
-      <div className="flex justify-between items-center border-b border-white/10 pb-4">
-        <h3 className="text-sm font-medium text-white tracking-wide uppercase">
-          Workspace
-        </h3>
+    <div className="space-y-3 bg-black border border-white/5 rounded-lg p-6 flex flex-col flex-1">
+      <div className="flex justify-between items-center border-b border-white/5 pb-4">
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+              d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10-10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zm0 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+          </svg>
+          <h3 className="text-sm font-medium text-white tracking-wide uppercase">Workspace</h3>
+        </div>
         {blocks.length > 0 && (
           <button
             onClick={handleClear}
             className="px-3 py-1.5 bg-white/5 text-white rounded-lg text-sm font-medium
-              border border-white/10 transition-all duration-200
-              hover:bg-white/10 hover:border-white/20
-              focus:outline-none focus:ring-1 focus:ring-white/20
+              border border-white/5 transition-all duration-200
+              hover:bg-white/10 hover:border-white/10
+              focus:outline-none focus:ring-1 focus:ring-white/10
               flex items-center gap-2"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -166,19 +170,19 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
         className={`
           flex-1 min-h-[400px] p-4 rounded-lg overflow-y-auto
           bg-black border transition-all duration-200
-          scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-white/10
-          hover:scrollbar-thumb-white/20
+          scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-white/5
+          hover:scrollbar-thumb-white/10
           [&::-webkit-scrollbar]:w-2
           [&::-webkit-scrollbar-track]:bg-white/5
-          [&::-webkit-scrollbar-thumb]:bg-white/10
+          [&::-webkit-scrollbar-thumb]:bg-white/5
           [&::-webkit-scrollbar-thumb]:rounded-full
           [&::-webkit-scrollbar-thumb]:border-2
           [&::-webkit-scrollbar-thumb]:border-transparent
           [&::-webkit-scrollbar-thumb]:bg-clip-padding
-          [&::-webkit-scrollbar-thumb]:hover:bg-white/20
-          ${isOver && canDrop ? 'border-white/20 bg-white/5' : 'border-white/10'}
-          ${isOver && !canDrop ? 'border-red-500/20 bg-red-500/5' : ''}
-          ${!isOver && canDrop ? 'border-white/20 border-dashed' : ''}
+          [&::-webkit-scrollbar-thumb]:hover:bg-white/10
+          ${isOver && canDrop ? 'border-white/10 bg-white/5' : 'border-white/5'}
+          ${isOver && !canDrop ? 'border-red-500/10 bg-red-500/5' : ''}
+          ${!isOver && canDrop ? 'border-white/10 border-dashed' : ''}
         `}
       >
         <div className="space-y-4 min-w-full">

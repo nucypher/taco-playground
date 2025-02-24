@@ -7,7 +7,7 @@ import { TacoCondition } from '../types/taco';
 
 interface EncryptionPanelProps {
   condition: TacoCondition | null;
-  onMessageKitGenerated: (messageKit: ThresholdMessageKit) => void;
+  onMessageKitGenerated: (messageKit: ThresholdMessageKit, ciphertextString: string) => void;
   onError: (error: string) => void;
 }
 
@@ -68,7 +68,19 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
         signer
       );
 
-      onMessageKitGenerated(messageKit);
+      console.log('Generated message kit:', {
+        messageKit,
+        keys: Object.keys(messageKit),
+        stringified: JSON.stringify(messageKit)
+      });
+
+      // Convert the message kit to bytes and then to base64
+      const messageKitBytes = messageKit.toBytes();
+      const messageKitString = btoa(String.fromCharCode(...Array.from(messageKitBytes)));
+      console.log('Base64 message kit:', messageKitString);
+      
+      onMessageKitGenerated(messageKit, messageKitString);
+      setMessage(''); // Clear the input after successful encryption
     } catch (error) {
       console.error('Encryption error:', error);
       onError(error instanceof Error ? error.message : 'Failed to encrypt message');
@@ -82,9 +94,15 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
   };
 
   return (
-    <div className="space-y-6 p-6 bg-black border border-white/10 rounded-lg">
-      <div className="flex justify-between items-center border-b border-white/10 pb-4">
-        <h3 className="text-sm font-medium text-white tracking-wide uppercase">Encrypt Message</h3>
+    <div className="space-y-6 p-6 bg-black border border-white/5 rounded-lg">
+      <div className="flex justify-between items-center border-b border-white/5 pb-4">
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7a4 4 0 00-8 0v4" />
+          </svg>
+          <h3 className="text-sm font-medium text-white tracking-wide uppercase">Encrypt Message</h3>
+        </div>
       </div>
       
       <div className="space-y-4">
@@ -96,9 +114,9 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Enter message to encrypt..."
-            className="w-full h-24 px-3 py-2 bg-white/5 text-white border border-white/10 rounded-lg
+            className="w-full h-24 px-3 py-2 bg-white/5 text-white border border-white/5 rounded-lg
               placeholder-white/30 font-mono text-sm
-              focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20
+              focus:outline-none focus:ring-1 focus:ring-white/10 focus:border-white/10
               transition-all duration-200"
           />
         </div>
@@ -108,10 +126,10 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
             onClick={handleEncrypt}
             disabled={!message || !condition || isEncrypting}
             className="flex-1 px-4 py-3 bg-white/5 text-white rounded-lg font-medium
-              border border-white/10 transition-all duration-200
-              hover:bg-white/10 hover:border-white/20
-              disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/5 disabled:hover:border-white/10
-              focus:outline-none focus:ring-1 focus:ring-white/20"
+              border border-white/5 transition-all duration-200
+              hover:bg-white/10 hover:border-white/10
+              disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/5 disabled:hover:border-white/5
+              focus:outline-none focus:ring-1 focus:ring-white/10"
           >
             <div className="flex items-center justify-center space-x-2">
               {isEncrypting && (
@@ -128,10 +146,10 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
             onClick={handleClear}
             disabled={isEncrypting || !message}
             className="px-4 py-3 bg-white/5 text-white rounded-lg font-medium
-              border border-white/10 transition-all duration-200
-              hover:bg-white/10 hover:border-white/20
-              disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/5 disabled:hover:border-white/10
-              focus:outline-none focus:ring-1 focus:ring-white/20"
+              border border-white/5 transition-all duration-200
+              hover:bg-white/10 hover:border-white/10
+              disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/5 disabled:hover:border-white/5
+              focus:outline-none focus:ring-1 focus:ring-white/10"
           >
             <div className="flex items-center justify-center space-x-2">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">

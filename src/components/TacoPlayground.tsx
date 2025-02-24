@@ -13,10 +13,13 @@ import ErrorPanel from './ErrorPanel';
 import TacoProvider from './TacoProvider';
 import { TacoCondition } from '../types/taco';
 import { ThresholdMessageKit } from '@nucypher/taco';
+import Link from 'next/link';
+import WalletButton from './WalletButton';
 
 const TacoPlayground: React.FC = () => {
   const [currentCondition, setCurrentCondition] = useState<TacoCondition | null>(null);
   const [messageKit, setMessageKit] = useState<ThresholdMessageKit | null>(null);
+  const [ciphertext, setCiphertext] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,6 +31,11 @@ const TacoPlayground: React.FC = () => {
     setCurrentCondition(condition);
   };
 
+  const handleMessageKitGenerated = (messageKit: ThresholdMessageKit, ciphertextString: string) => {
+    setMessageKit(messageKit);
+    setCiphertext(ciphertextString);
+  };
+
   const handleError = (error: string) => {
     setError(error);
     // Automatically clear error after 10 seconds
@@ -36,6 +44,10 @@ const TacoPlayground: React.FC = () => {
 
   const handleClearError = () => {
     setError(null);
+  };
+
+  const handleConnect = () => {
+    // Implementation of handleConnect function
   };
 
   return (
@@ -56,13 +68,14 @@ const TacoPlayground: React.FC = () => {
               <div className="bg-black rounded-lg">
                 <EncryptionPanel
                   condition={currentCondition}
-                  onMessageKitGenerated={setMessageKit}
+                  onMessageKitGenerated={handleMessageKitGenerated}
                   onError={handleError}
                 />
               </div>
               <div className="bg-black rounded-lg">
                 <DecryptionPanel 
                   messageKit={messageKit}
+                  ciphertext={ciphertext}
                   onError={handleError}
                 />
               </div>

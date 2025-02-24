@@ -26,7 +26,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({
   }), []);
 
   return (
-    <div className="border-b border-white/10 last:border-b-0">
+    <div className="border-b border-white/5 last:border-b-0">
       <button
         onClick={onToggle}
         className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium 
@@ -73,21 +73,21 @@ const BlockSidebar: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col bg-black">
-      <div className="border-b border-white/10 px-3 py-3">
+      <div className="border-b border-white/5 px-3 py-3">
         <h3 className="text-sm font-medium text-white tracking-wide uppercase">Blocks</h3>
         <p className="text-xs text-white/60 mt-1">Drag blocks to build conditions</p>
       </div>
       <div className="flex-1 overflow-y-auto
-        scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-white/10
-        hover:scrollbar-thumb-white/20
+        scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-white/5
+        hover:scrollbar-thumb-white/10
         [&::-webkit-scrollbar]:w-2
         [&::-webkit-scrollbar-track]:bg-white/5
-        [&::-webkit-scrollbar-thumb]:bg-white/10
+        [&::-webkit-scrollbar-thumb]:bg-white/5
         [&::-webkit-scrollbar-thumb]:rounded-full
         [&::-webkit-scrollbar-thumb]:border-2
         [&::-webkit-scrollbar-thumb]:border-transparent
         [&::-webkit-scrollbar-thumb]:bg-clip-padding
-        [&::-webkit-scrollbar-thumb]:hover:bg-white/20
+        [&::-webkit-scrollbar-thumb]:hover:bg-white/10
       ">
         {categorizedBlocks.map(({ category, blocks }) => (
           <CategorySection

@@ -47,6 +47,8 @@ const CiphertextDisplay: React.FC<CiphertextDisplayProps> = ({
           onChange={onChange ? (e) => onChange(e.target.value) : undefined}
           placeholder={isReadOnly ? "No encrypted message yet..." : "Paste encrypted message here..."}
           readOnly={isReadOnly}
+          autoComplete="off"
+          data-form-type="other"
           className="w-full h-24 px-3 py-2 bg-white/5 text-white border border-white/10 rounded-lg
             placeholder-white/30 font-mono text-sm
             focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20

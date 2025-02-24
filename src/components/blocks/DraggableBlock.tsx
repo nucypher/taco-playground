@@ -335,6 +335,8 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
                         type={input.inputType || 'text'}
                         value={input.value || ''}
                         onChange={(e) => handleValueChange(input.id, e)}
+                        autoComplete="off"
+                        data-form-type="other"
                         className="w-full px-2 py-1.5 text-sm bg-black/30 border border-white/5 rounded 
                           focus:outline-none focus:border-white/20 placeholder-white/20"
                         placeholder={`Enter ${input.label.toLowerCase()}`}

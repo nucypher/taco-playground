@@ -51,6 +51,8 @@ const ValueBlock: React.FC<ValueBlockProps> = ({
         value={value}
         onChange={handleChange}
         placeholder={getPlaceholder()}
+        autoComplete="off"
+        data-form-type="other"
         className={`
           bg-gray-800/90 rounded px-2 py-1 text-sm w-full text-gray-100
           border border-transparent

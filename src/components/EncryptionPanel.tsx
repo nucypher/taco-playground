@@ -119,6 +119,8 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Enter message to encrypt..."
+            autoComplete="off"
+            data-form-type="other"
             className="w-full h-24 px-3 py-2 bg-white/5 text-white border border-white/5 rounded-lg
               placeholder-white/30 font-mono text-sm
               focus:outline-none focus:ring-1 focus:ring-white/10 focus:border-white/10

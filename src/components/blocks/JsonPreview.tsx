@@ -21,6 +21,7 @@ const JsonPreview: React.FC<JsonPreviewProps> = ({ condition }) => {
     if (!condition) return '';
     
     // Helper function to safely access properties that might not exist
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getProperty = (obj: any, prop: string): any => {
       return obj && typeof obj === 'object' && prop in obj ? obj[prop] : undefined;
     };

@@ -1,305 +1,197 @@
 import { Block } from './BlockTypes';
 import { TacoCondition, TimeCondition, ContractCondition, RpcCondition, CompoundCondition, ChainId, ReturnValueTest } from '../../types/taco';
 
-type ProcessedCondition = TimeCondition | ContractCondition | RpcCondition | CompoundCondition;
-
-interface ConditionBuilder {
-  conditionType?: 'time' | 'contract' | 'rpc' | 'compound';
-  chain?: ChainId;
-  contractAddress?: string;
-  method?: string;
-  parameters?: unknown[];
-  standardContractType?: 'ERC20' | 'ERC721';
-  returnValueTest?: ReturnValueTest;
-  functionAbi?: {
-    type: 'function';
-    name: string;
-    inputs: {
-      type: string;
-      name: string;
-      internalType: string;
-    }[];
-    outputs: [{
-      type: string;
-      name: string;
-      internalType: string;
-    }, ...{
-      type: string;
-      name: string;
-      internalType: string;
-    }[]];
-    stateMutability: 'view' | 'pure';
-  };
-}
-
+// Helper function to check if a chain ID is valid
 const isValidChainId = (chainId: number): chainId is ChainId => {
   return [1, 137, 80002, 11155111].includes(chainId);
 };
 
+// Helper function to safely convert a string to ChainId
+const parseChainId = (value: string): ChainId => {
+  const parsed = parseInt(value);
+  if (isValidChainId(parsed)) {
+    return parsed;
+  }
+  // Default to Sepolia if invalid
+  return 11155111;
+};
+
 export const blocksToJson = (blocks: Block[]): TacoCondition | null => {
-  const processBlock = (block: Block): ProcessedCondition | null => {
-    if (!block || !block.properties) {
-      return null;
-    }
+  if (!blocks.length) return null;
 
-    // Handle operator blocks differently
-    if (block.type === 'operator') {
-      // Find all connected conditions
-      const connectedConditions = block.inputs
-        ?.filter(input => input.connected)
-        .map(input => input.connected)
-        .filter((block): block is Block => block !== undefined) || [];
+  // Find the first standalone condition or operator block
+  const rootBlock = blocks.find(block => 
+    (block.type === 'condition' || block.type === 'operator') && 
+    !blocks.some(b => 
+      b.type === 'operator' && 
+      b.inputs?.some(input => input.connected?.id === block.id)
+    )
+  );
 
-      // Process each connected condition
-      const operands = connectedConditions
-        .map(connectedBlock => {
-          // Recursively process each connected block
-          const processedOperand = processBlock(connectedBlock);
-          if (!processedOperand) {
-            console.error('Failed to process operand:', connectedBlock);
-            return null;
-          }
-          return processedOperand;
-        })
-        .filter((condition): condition is ProcessedCondition => condition !== null);
+  if (!rootBlock) return null;
 
-      // For NOT operator, ensure we only have one operand
-      if (block.properties.operator === 'not') {
-        if (operands.length === 0) return null;
-        // Ensure the operand is a valid condition with all required fields
-        const operand = operands[0];
-        if (!operand) return null;
-        
-        // Validate the operand has required fields based on its type
-        if (operand.conditionType === 'rpc') {
-          if (!operand.chain || !isValidChainId(operand.chain) || 
-              operand.method !== 'eth_getBalance' ||
-              !operand.parameters || !Array.isArray(operand.parameters) ||
-              operand.parameters[0] !== ':userAddress' || operand.parameters[1] !== 'latest' ||
-              !operand.returnValueTest) {
-            console.error('Invalid RPC operand for NOT:', operand);
-            return null;
-          }
-        }
-        if (operand.conditionType === 'time') {
-          if (!operand.chain || !isValidChainId(operand.chain) ||
-              operand.method !== 'blocktime' ||
-              !operand.returnValueTest) {
-            console.error('Invalid time operand for NOT:', operand);
-            return null;
-          }
-        }
-        if (operand.conditionType === 'contract') {
-          if (!operand.chain || !isValidChainId(operand.chain) ||
-              !operand.contractAddress || !operand.method ||
-              !operand.returnValueTest) {
-            console.error('Invalid contract operand for NOT:', operand);
-            return null;
-          }
-        }
-        
-        return {
-          conditionType: 'compound',
-          operator: 'not',
-          operands: [operand]
-        } as CompoundCondition;
-      }
+  // Recursively convert blocks to JSON
+  return blockToJson(rootBlock);
+};
 
-      // Create compound condition for AND/OR
-      const compoundCondition: CompoundCondition = {
-        conditionType: 'compound',
-        operator: (block.properties.operator as 'and' | 'or'),
-        operands
-      };
+const blockToJson = (block: Block): TacoCondition | null => {
+  if (!block) return null;
 
-      return compoundCondition;
-    }
+  if (block.type === 'operator') {
+    // Handle operator blocks (AND/OR)
+    const operands = block.inputs
+      ?.filter(input => input.connected)
+      .map(input => blockToJson(input.connected!))
+      .filter(Boolean) as TacoCondition[];
 
-    // Process condition blocks
-    const builder: ConditionBuilder = {};
+    if (!operands?.length) return null;
 
-    block.inputs?.forEach(input => {
-      // Check for direct value first, then fall back to connected value
-      const value = input.value || input.connected?.value;
-      if (!value && value !== '0') {  // Allow zero as a valid value
-        return;
-      }
+    return {
+      conditionType: 'compound',
+      operator: (block.properties?.operator || 'and') as 'and' | 'or' | 'not',
+      operands
+    } as CompoundCondition;
+  } else if (block.type === 'condition') {
+    // Handle condition blocks
+    const conditionType = block.properties?.conditionType as 'time' | 'contract' | 'rpc';
+    if (!conditionType) return null;
 
-      switch (input.id) {
-        case 'contractAddress':
-          builder.contractAddress = value.trim();
-          break;
-        case 'chain':
-          const chainId = parseInt(value);
-          if (!isNaN(chainId) && isValidChainId(chainId)) {
-            builder.chain = chainId;
-          }
-          break;
-        case 'minBalance':
-          const balance = parseFloat(value);
-          if (!isNaN(balance)) {
-            builder.returnValueTest = {
-              comparator: block.properties?.method === 'eth_getBalance' ? '>=' : '>',
-              value: balance
-            };
-          }
-          break;
-        case 'timestamp':
-        case 'minTimestamp':
-          const timestamp = parseInt(value);
-          if (!isNaN(timestamp)) {
-            builder.conditionType = 'time';
-            builder.method = 'blocktime';
-            builder.returnValueTest = {
-              comparator: '>=',
-              value: timestamp
-            };
-          }
-          break;
-        case 'tokenId':
-          if (!builder.parameters) {
-            builder.parameters = [];
-          }
-          builder.parameters = builder.parameters.map((p: unknown) => 
-            p === ':tokenId' ? value : p
-          );
-          break;
-        case 'method':
-          builder.method = value;
-          break;
-        case 'parameters':
-          try {
-            builder.parameters = JSON.parse(value);
-          } catch (e) {
-            console.error('Failed to parse parameters:', e);
-          }
-          break;
-        case 'functionAbi':
-          try {
-            const parsedAbi = JSON.parse(value);
-            if (
-              parsedAbi &&
-              parsedAbi.type === 'function' &&
-              parsedAbi.name &&
-              Array.isArray(parsedAbi.inputs) &&
-              Array.isArray(parsedAbi.outputs) &&
-              parsedAbi.outputs.length > 0 &&
-              (parsedAbi.stateMutability === 'view' || parsedAbi.stateMutability === 'pure')
-            ) {
-              builder.functionAbi = parsedAbi;
-            } else {
-              console.error('Invalid function ABI format:', parsedAbi);
-            }
-          } catch (e) {
-            console.error('Failed to parse function ABI:', e);
-          }
-          break;
-      }
-    });
-
-    // For eth_getBalance conditions, ensure we're using the RPC condition type
-    if (block.properties?.method === 'eth_getBalance' && builder.chain) {
-      const rpcCondition: RpcCondition = {
-        conditionType: 'rpc',
-        chain: builder.chain,
-        method: 'eth_getBalance',
-        parameters: [':userAddress', 'latest'],
-        returnValueTest: builder.returnValueTest || {
-          comparator: '>=',
-          value: 0
-        }
-      };
-      return rpcCondition;
-    }
-
-    // For contract conditions
-    if (block.properties?.conditionType === 'contract' && builder.chain) {
-      console.log('Processing contract condition:', {
-        properties: block.properties,
-        builder,
-        inputs: block.inputs
-      });
-
-      // Get method from either block properties or builder
-      const method = (block.properties.method as string) || builder.method;
-      if (!method) {
-        console.log('No method found for contract condition');
-        return null;
-      }
-
-      // Only allow ERC20 and ERC721 as standardContractType
-      const standardContractType = block.properties.standardContractType;
-      const validatedContractType = 
-        standardContractType === 'ERC20' || standardContractType === 'ERC721' 
-          ? standardContractType 
-          : undefined;
-
-      const contractCondition: ContractCondition = {
-        conditionType: 'contract',
-        chain: builder.chain,
-        contractAddress: builder.contractAddress || '',
-        method: method,
-        parameters: (block.properties.parameters as unknown[]) || builder.parameters || [],
-        standardContractType: validatedContractType,
-        returnValueTest: builder.returnValueTest || {
-          comparator: '>',
-          value: 0
-        }
-      };
-
-      // For ERC20 balanceOf, ensure we have the correct parameters
-      if (block.properties.standardContractType === 'ERC20' && method === 'balanceOf') {
-        console.log('Setting up ERC20 balanceOf parameters');
-        contractCondition.parameters = [':userAddress'];
-      }
-
-      console.log('Created contract condition:', contractCondition);
-      return contractCondition;
-    }
-
-    // For time conditions
-    if (builder.conditionType === 'time' && builder.chain) {
+    if (conditionType === 'time') {
+      // Time condition
       const timeCondition: TimeCondition = {
         conditionType: 'time',
-        chain: builder.chain,
+        chain: 11155111, // Default to Sepolia
         method: 'blocktime',
-        returnValueTest: builder.returnValueTest || {
+        returnValueTest: {
           comparator: '>=',
           value: 0
         }
       };
+      
+      // Add chain ID if present
+      const chainInput = block.inputs?.find(input => input.id === 'chain');
+      if (chainInput?.value) {
+        timeCondition.chain = parseChainId(chainInput.value);
+      }
+      
+      // Add timestamp if present
+      const timestampInput = block.inputs?.find(input => input.id === 'minTimestamp');
+      if (timestampInput?.value) {
+        // Use the comparator if available, default to '>='
+        // @ts-expect-error - We know comparator exists in BlockInput
+        const comparator = (timestampInput.comparator || '>=') as '>=' | '>' | '<=' | '<' | '==';
+        
+        timeCondition.returnValueTest = {
+          comparator,
+          value: parseInt(timestampInput.value)
+        };
+      }
+      
       return timeCondition;
+    } else if (conditionType === 'rpc') {
+      // RPC condition (e.g., ETH balance)
+      const rpcCondition: RpcCondition = {
+        conditionType: 'rpc',
+        chain: 11155111, // Default to Sepolia
+        method: 'eth_getBalance',
+        parameters: [':userAddress', 'latest'] as [string, 'latest'],
+        returnValueTest: {
+          comparator: '>=',
+          value: '0'
+        }
+      };
+      
+      // Add chain ID if present
+      const chainInput = block.inputs?.find(input => input.id === 'chain');
+      if (chainInput?.value) {
+        rpcCondition.chain = parseChainId(chainInput.value);
+      }
+      
+      // Add method if present in properties
+      if (block.properties?.method) {
+        rpcCondition.method = block.properties.method as 'eth_getBalance';
+      }
+      
+      // Add parameters if present in properties
+      if (block.properties?.parameters) {
+        rpcCondition.parameters = block.properties.parameters as [string, 'latest'];
+      }
+      
+      // Add balance test if present
+      const balanceInput = block.inputs?.find(input => input.id === 'minBalance');
+      if (balanceInput?.value) {
+        // Use the comparator if available, default to '>='
+        // @ts-expect-error - We know comparator exists in BlockInput
+        const comparator = (balanceInput.comparator || '>=') as '>=' | '>' | '<=' | '<' | '==';
+        
+        rpcCondition.returnValueTest = {
+          comparator,
+          value: parseInt(balanceInput.value)
+        };
+      }
+      
+      return rpcCondition;
+    } else if (conditionType === 'contract') {
+      // Contract condition (e.g., ERC20, ERC721)
+      const contractCondition: ContractCondition = {
+        conditionType: 'contract',
+        chain: 11155111, // Default to Sepolia
+        contractAddress: '',
+        method: 'balanceOf',
+        parameters: [':userAddress'],
+        returnValueTest: {
+          comparator: '>=',
+          value: '0'
+        }
+      };
+      
+      // Add chain ID if present
+      const chainInput = block.inputs?.find(input => input.id === 'chain');
+      if (chainInput?.value) {
+        contractCondition.chain = parseChainId(chainInput.value);
+      }
+      
+      // Add contract address if present
+      const contractInput = block.inputs?.find(input => input.id === 'contractAddress');
+      if (contractInput?.value) {
+        contractCondition.contractAddress = contractInput.value;
+      }
+      
+      // Add standard contract type if present
+      if (block.properties?.standardContractType) {
+        contractCondition.standardContractType = block.properties.standardContractType as 'ERC20' | 'ERC721';
+      }
+      
+      // Add method if present in properties
+      if (block.properties?.method) {
+        contractCondition.method = block.properties.method as string;
+      }
+      
+      // Add parameters if present in properties
+      if (block.properties?.parameters) {
+        contractCondition.parameters = block.properties.parameters as unknown[];
+      }
+      
+      // Add return value test if present
+      const tokenAmountInput = block.inputs?.find(input => input.id === 'tokenAmount');
+      if (tokenAmountInput?.value) {
+        // Use the comparator if available, default to '>='
+        // @ts-expect-error - We know comparator exists in BlockInput
+        const comparator = (tokenAmountInput.comparator || '>=') as '>=' | '>' | '<=' | '<' | '==';
+        
+        contractCondition.returnValueTest = {
+          comparator,
+          value: parseInt(tokenAmountInput.value)
+        };
+      } else if (block.properties?.returnValueTest) {
+        contractCondition.returnValueTest = block.properties.returnValueTest as ReturnValueTest;
+      }
+      
+      return contractCondition;
     }
-
-    return null;
-  };
-
-  // Process only top-level blocks
-  const topLevelBlocks = blocks.filter(block => {
-    const isConnected = blocks.some(b => 
-      b.inputs?.some(input => input.connected?.id === block.id)
-    );
-    return !isConnected;
-  });
-
-  if (topLevelBlocks.length === 0) return null;
-  if (topLevelBlocks.length === 1) {
-    return processBlock(topLevelBlocks[0]);
   }
 
-  // If multiple top-level blocks, combine them with AND
-  const conditions = topLevelBlocks
-    .map(block => processBlock(block))
-    .filter((condition): condition is ProcessedCondition => condition !== null);
-
-  if (conditions.length === 0) return null;
-  if (conditions.length === 1) return conditions[0];
-
-  return {
-    conditionType: 'compound',
-    operator: 'and',
-    operands: conditions
-  };
+  return null;
 };
 
 export const formatJson = (json: TacoCondition | null): string => {

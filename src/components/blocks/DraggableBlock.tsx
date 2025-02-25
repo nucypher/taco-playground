@@ -3,6 +3,7 @@
 import React, { useRef, useCallback } from 'react';
 import { useDrag } from 'react-dnd';
 import { Block, BlockInput } from './BlockTypes';
+import { ComparatorSelect } from './ComparatorSelect';
 import { DropTarget } from './DropTarget';
 import { DragItem, DragRef } from './types';
 
@@ -87,39 +88,42 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
           return { handled: true }; // Return early after handling value drop
         }
 
-        if (!input.connected) {
-          const droppedBlock = JSON.parse(JSON.stringify(item)) as Block;
-          droppedBlock.isTemplate = false;
+        // This is the key fix - we need to handle drops of condition blocks into operator inputs
+        // even if the input already has a connected block (replace it)
+        const droppedBlock = JSON.parse(JSON.stringify(item)) as Block;
+        droppedBlock.isTemplate = false;
 
-          // Initialize values for all inputs in the dropped block
-          if (droppedBlock.inputs) {
-            droppedBlock.inputs = droppedBlock.inputs.map((input: BlockInput) => ({
-              ...input,
-              value: input.value || '',
-              inputType: input.inputType || 'text'
-            }));
-          }
-
-          input.connected = droppedBlock;
-
-          const connectedCount = updatedBlock.inputs?.filter((input: BlockInput) => input.connected).length || 0;
-          input.label = `Condition ${connectedCount}`;
-
-          const lastInput = updatedBlock.inputs?.[updatedBlock.inputs.length - 1];
-          const maxInputs = updatedBlock.properties?.maxInputs;
-          
-          // Only add new input slot if we haven't reached maxInputs (if specified)
-          if (lastInput?.id === inputId && 
-              (!maxInputs || connectedCount < maxInputs)) {
-            updatedBlock.inputs.push({
-              id: `condition-${Date.now()}`,
-              type: ['condition', 'operator'],
-              label: 'Add Condition'
-            });
-          }
-          onBlockUpdate(updatedBlock);
-          return { handled: true }; // Return after handling operator drop
+        // Initialize values for all inputs in the dropped block
+        if (droppedBlock.inputs) {
+          droppedBlock.inputs = droppedBlock.inputs.map((input: BlockInput) => ({
+            ...input,
+            value: input.value || '',
+            inputType: input.inputType || 'text'
+          }));
         }
+
+        input.connected = droppedBlock;
+
+        // Update the label to show the condition number
+        const connectedCount = updatedBlock.inputs?.filter((input: BlockInput) => input.connected).length || 0;
+        input.label = `Condition ${connectedCount}`;
+
+        const lastInput = updatedBlock.inputs?.[updatedBlock.inputs.length - 1];
+        const maxInputs = updatedBlock.properties?.maxInputs;
+        
+        // Only add new input slot if we haven't reached maxInputs (if specified)
+        // and if this was the last input
+        if (lastInput?.id === inputId && 
+            (!maxInputs || connectedCount < maxInputs)) {
+          updatedBlock.inputs.push({
+            id: `condition-${Date.now()}`,
+            type: ['condition', 'operator'],
+            label: 'Add Condition'
+          });
+        }
+        
+        onBlockUpdate(updatedBlock);
+        return { handled: true }; // Return after handling operator drop
       }
     } else if (block.type === 'condition') {
       // Handle direct drops into condition inputs
@@ -209,6 +213,18 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
         input.value = value;
         onBlockUpdate(updatedBlock);
       }
+    }
+  };
+
+  const handleComparatorChange = (inputId: string, comparator: string) => {
+    if (!onBlockUpdate || !isWorkspaceBlock) return;
+
+    const updatedBlock = JSON.parse(JSON.stringify(block));
+    const input = updatedBlock.inputs?.find((input: BlockInput) => input.id === inputId);
+    
+    if (input) {
+      input.comparator = comparator;
+      onBlockUpdate(updatedBlock);
     }
   };
 
@@ -321,22 +337,49 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
 
               // Only render input fields for direct condition blocks
               if (block.type === 'condition') {
+                // Check if this is a numeric input that should have a comparator
+                const needsComparator = 
+                  (input.id === 'minBalance' || input.id === 'minTimestamp' || input.id === 'tokenAmount') && 
+                  input.inputType === 'number';
+                
                 return (
                   <div key={input.id} className={`
                     ${index !== 0 ? 'pt-3 border-t border-white/5' : ''}
                   `}>
                     <div className="flex flex-col gap-1.5">
                       <span className="text-xs text-white/50">{input.label}</span>
-                      <input
-                        type={input.inputType || 'text'}
-                        value={input.value || ''}
-                        onChange={(e) => handleValueChange(input.id, e)}
-                        autoComplete="off"
-                        data-form-type="other"
-                        className="w-full px-2 py-1.5 text-sm bg-black/30 border border-white/5 rounded 
-                          focus:outline-none focus:border-white/20 placeholder-white/20"
-                        placeholder={`Enter ${input.label.toLowerCase()}`}
-                      />
+                      
+                      {needsComparator ? (
+                        <div className="flex items-center gap-2">
+                          <ComparatorSelect
+                            // @ts-expect-error - We know comparator exists in BlockInput
+                            value={input.comparator || '>='}
+                            onChange={(value: string) => handleComparatorChange(input.id, value)}
+                            className="w-16"
+                          />
+                          <input
+                            type={input.inputType || 'text'}
+                            value={input.value || ''}
+                            onChange={(e) => handleValueChange(input.id, e)}
+                            autoComplete="off"
+                            data-form-type="other"
+                            className="flex-1 px-2 py-1.5 text-sm bg-black/30 border border-white/5 rounded 
+                              focus:outline-none focus:border-white/20 placeholder-white/20"
+                            placeholder={`Enter ${input.label.toLowerCase()}`}
+                          />
+                        </div>
+                      ) : (
+                        <input
+                          type={input.inputType || 'text'}
+                          value={input.value || ''}
+                          onChange={(e) => handleValueChange(input.id, e)}
+                          autoComplete="off"
+                          data-form-type="other"
+                          className="w-full px-2 py-1.5 text-sm bg-black/30 border border-white/5 rounded 
+                            focus:outline-none focus:border-white/20 placeholder-white/20"
+                          placeholder={`Enter ${input.label.toLowerCase()}`}
+                        />
+                      )}
                     </div>
                   </div>
                 );

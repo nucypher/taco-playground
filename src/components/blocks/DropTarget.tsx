@@ -43,7 +43,13 @@ export const DropTarget: React.FC<DropTargetProps> = ({
         return item.type === 'value';
       }
       
-      // For operator inputs, accept conditions and operators
+      // For operator inputs (condition-1, condition-2, etc), accept conditions and operators
+      // This is the key fix - check if the inputId starts with 'condition-' to identify operator inputs
+      if (inputId.startsWith('condition-')) {
+        return item.type === 'condition' || item.type === 'operator';
+      }
+      
+      // For other inputs, accept conditions and operators
       return item.type === 'condition' || item.type === 'operator';
     },
     drop: (item: DragItem, monitor) => {

@@ -23,6 +23,11 @@
   }
 }
 
+html, body {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
@@ -54,4 +59,17 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+/* Zoom level adjustments */
+.zoom-80 {
+  transform: scale(0.8);
+  transform-origin: top left;
+  width: 125%;
+  height: 125%;
+}
+
+/* Ensure proper scrolling with zoom */
+.min-h-screen {
+  min-height: 125vh;
 }

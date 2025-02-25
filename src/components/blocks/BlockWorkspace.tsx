@@ -2,11 +2,17 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useDrop } from 'react-dnd';
-import { Block } from './BlockTypes';
+import { Block, BLOCK_CATEGORIES } from './BlockTypes';
 import { TacoCondition } from '../../types/taco';
 import DraggableBlock from './DraggableBlock';
 import { blocksToJson } from './blockUtils';
-import { BLOCK_CATEGORIES } from './BlockTypes';
+import { ComparatorSelect } from './ComparatorSelect';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { DropTarget } from './DropTarget';
+import { DragItem as DragItemType } from './types';
+import { v4 as uuidv4 } from 'uuid';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 interface BlockWorkspaceProps {
   onConditionChange: (condition: TacoCondition | null) => void;
@@ -26,6 +32,11 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [dropError, setDropError] = useState<string>('');
   const prevJsonRef = useRef<string>('');
+  
+  // Use refs for scroll buttons and container
+  const leftScrollButtonRef = useRef<HTMLButtonElement>(null);
+  const rightScrollButtonRef = useRef<HTMLButtonElement>(null);
+  const quickConditionsContainerRef = useRef<HTMLDivElement>(null);
 
   // Clear error message after a delay
   useEffect(() => {
@@ -169,6 +180,35 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
 
   drop(elementRef);
 
+  // Add effect to handle scroll button states
+  useEffect(() => {
+    const container = quickConditionsContainerRef.current;
+    const leftButton = leftScrollButtonRef.current;
+    const rightButton = rightScrollButtonRef.current;
+
+    if (!container || !leftButton || !rightButton) return;
+
+    const checkScrollPosition = () => {
+      // Disable left button if scrolled all the way to the left
+      leftButton.disabled = container.scrollLeft <= 0;
+      
+      // Disable right button if scrolled all the way to the right
+      const maxScrollLeft = container.scrollWidth - container.clientWidth;
+      rightButton.disabled = Math.abs(container.scrollLeft - maxScrollLeft) < 1;
+    };
+
+    // Initial check
+    checkScrollPosition();
+
+    // Add scroll event listener
+    container.addEventListener('scroll', checkScrollPosition);
+
+    // Cleanup
+    return () => {
+      container.removeEventListener('scroll', checkScrollPosition);
+    };
+  }, [blocks]); // Re-run when blocks change as it might affect scrollWidth
+
   return (
     <div className="space-y-3 bg-transparent border border-white/10 rounded-lg p-6 flex flex-col flex-1">
       <div className="flex justify-between items-center border-b border-white/10 -mx-6 px-6 py-4 -mt-6 bg-white/5">
@@ -200,229 +240,411 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
         )}
       </div>
 
-      <div className="flex items-center gap-3 px-4 py-3 bg-white/[0.02] border border-white/10 rounded-lg">
-        <div className="flex items-center gap-2">
-          <svg className="w-4 h-4 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span className="text-sm font-medium text-white/60">Quick Conditions:</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              // Clear workspace first
-              handleClear();
-              
-              const fiveMinutesFromNow = new Date();
-              fiveMinutesFromNow.setMinutes(fiveMinutesFromNow.getMinutes() + 5);
-              
-              const timestamp = Math.floor(fiveMinutesFromNow.getTime() / 1000);
-              
-              const newBlock: Block = {
-                id: `time-${Date.now()}`,
-                type: 'condition',
-                category: BLOCK_CATEGORIES.CONDITIONS,
-                label: 'Time Lock',
-                inputs: [
-                  { 
-                    id: 'chain', 
-                    type: ['value'], 
-                    label: 'Chain ID', 
-                    inputType: 'number',
-                    value: '11155111',
-                    placeholder: 'Enter 1, 137, 80002, or 11155111'
-                  },
-                  { 
-                    id: 'minTimestamp', 
-                    type: ['value'], 
-                    label: 'Minimum Timestamp', 
-                    inputType: 'number',
-                    value: timestamp.toString(),
-                    placeholder: 'Unix timestamp in seconds'
-                  }
-                ],
-                properties: {
-                  conditionType: 'time'
-                },
-                isTemplate: false
-              };
-              
-              setBlocks(prev => [...prev, newBlock]);
-            }}
-            className="px-3 py-1.5 bg-white/5 text-white/80 rounded-lg text-sm
-              border border-white/10 transition-all duration-200
-              hover:bg-white/10 hover:border-white/20 hover:text-white
-              focus:outline-none focus:ring-1 focus:ring-white/20
-              flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <div className="px-4 py-3 bg-white/[0.02] border border-white/10 rounded-lg">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>Timelock (5min)</span>
-          </button>
-
-          <button
-            onClick={() => {
-              // Clear workspace first
-              handleClear();
-              
-              const newBlock: Block = {
-                id: `eth-balance-${Date.now()}`,
-                type: 'condition',
-                category: BLOCK_CATEGORIES.CONDITIONS,
-                label: 'ETH Balance',
-                inputs: [
-                  { 
-                    id: 'chain', 
-                    type: ['value'], 
-                    label: 'Chain ID', 
-                    inputType: 'number',
-                    value: '11155111',
-                    placeholder: 'Enter 1, 137, 80002, or 11155111'
+            <span className="text-sm font-medium text-white/60">Quick Conditions:</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <button 
+              id="scroll-left-btn"
+              className="p-1.5 bg-white/5 text-white/60 rounded-lg
+                hover:bg-white/10 hover:text-white/80 transition-all duration-200
+                focus:outline-none focus:ring-1 focus:ring-white/20
+                disabled:opacity-30 disabled:cursor-not-allowed"
+              onClick={() => {
+                const container = document.getElementById('quick-conditions-container');
+                if (container) {
+                  container.scrollBy({ left: -200, behavior: 'smooth' });
+                }
+              }}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button 
+              id="scroll-right-btn"
+              className="p-1.5 bg-white/5 text-white/60 rounded-lg
+                hover:bg-white/10 hover:text-white/80 transition-all duration-200
+                focus:outline-none focus:ring-1 focus:ring-white/20
+                disabled:opacity-30 disabled:cursor-not-allowed"
+              onClick={() => {
+                const container = document.getElementById('quick-conditions-container');
+                if (container) {
+                  container.scrollBy({ left: 200, behavior: 'smooth' });
+                }
+              }}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div 
+          id="quick-conditions-container"
+          className="overflow-x-hidden pb-2 -mx-1 px-1 scroll-smooth"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          <div className="flex items-center gap-2 min-w-max">
+            <button
+              onClick={() => {
+                // Clear workspace first
+                handleClear();
+                
+                const fiveMinutesFromNow = new Date();
+                fiveMinutesFromNow.setMinutes(fiveMinutesFromNow.getMinutes() + 5);
+                
+                const timestamp = Math.floor(fiveMinutesFromNow.getTime() / 1000);
+                
+                const newBlock: Block = {
+                  id: `time-${Date.now()}`,
+                  type: 'condition',
+                  category: BLOCK_CATEGORIES.CONDITIONS,
+                  label: 'Time Lock',
+                  inputs: [
+                    { 
+                      id: 'chain', 
+                      type: ['value'], 
+                      label: 'Chain ID', 
+                      inputType: 'number',
+                      value: '11155111',
+                      placeholder: 'Enter 1, 137, 80002, or 11155111'
+                    },
+                    { 
+                      id: 'minTimestamp', 
+                      type: ['value'], 
+                      label: 'Minimum Timestamp', 
+                      inputType: 'number',
+                      value: timestamp.toString(),
+                      placeholder: 'Unix timestamp in seconds',
+                      // @ts-expect-error - We know comparator exists in BlockInput
+                      comparator: '>='
+                    }
+                  ],
+                  properties: {
+                    conditionType: 'time'
                   },
-                  { 
-                    id: 'minBalance', 
-                    type: ['value'], 
-                    label: 'Min Balance (Wei)', 
-                    inputType: 'number',
-                    value: '1'
-                  }
-                ],
-                properties: {
-                  conditionType: 'rpc',
-                  method: 'eth_getBalance',
-                  parameters: [':userAddress', 'latest']
-                },
-                isTemplate: false
-              };
-              
-              setBlocks(prev => [...prev, newBlock]);
-            }}
-            className="px-3 py-1.5 bg-white/5 text-white/80 rounded-lg text-sm
-              border border-white/10 transition-all duration-200
-              hover:bg-white/10 hover:border-white/20 hover:text-white
-              focus:outline-none focus:ring-1 focus:ring-white/20
-              flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>ETH Balance (1 Wei)</span>
-          </button>
+                  isTemplate: false
+                };
+                
+                setBlocks(prev => [...prev, newBlock]);
+              }}
+              className="px-3 py-1.5 bg-white/5 text-white/80 rounded-lg text-sm
+                border border-white/10 transition-all duration-200
+                hover:bg-white/10 hover:border-white/20 hover:text-white
+                focus:outline-none focus:ring-1 focus:ring-white/20
+                flex items-center gap-2 whitespace-nowrap"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Timelock (5min)</span>
+            </button>
 
-          <button
-            onClick={() => {
-              // Clear workspace first
-              handleClear();
-              
-              const fiveMinutesFromNow = new Date();
-              fiveMinutesFromNow.setMinutes(fiveMinutesFromNow.getMinutes() + 5);
-              const timestamp = Math.floor(fiveMinutesFromNow.getTime() / 1000);
-              
-              // Create the compound AND condition with both timelock and ETH balance
-              const newBlock: Block = {
-                id: `compound-${Date.now()}`,
-                type: 'operator',
-                category: BLOCK_CATEGORIES.OPERATORS,
-                label: 'AND',
-                inputs: [
-                  {
-                    id: `condition-1-${Date.now()}`,
-                    type: ['condition', 'operator'],
-                    label: 'Condition 1',
-                    connected: {
-                      id: `time-${Date.now()}`,
-                      type: 'condition',
-                      category: BLOCK_CATEGORIES.CONDITIONS,
-                      label: 'Time Lock',
-                      inputs: [
-                        { 
-                          id: 'chain', 
-                          type: ['value'], 
-                          label: 'Chain ID', 
-                          inputType: 'number',
-                          value: '11155111',
-                          placeholder: 'Enter 1, 137, 80002, or 11155111'
+            <button
+              onClick={() => {
+                // Clear workspace first
+                handleClear();
+                
+                const newBlock: Block = {
+                  id: `eth-balance-${Date.now()}`,
+                  type: 'condition',
+                  category: BLOCK_CATEGORIES.CONDITIONS,
+                  label: 'ETH Balance',
+                  inputs: [
+                    { 
+                      id: 'chain', 
+                      type: ['value'], 
+                      label: 'Chain ID', 
+                      inputType: 'number',
+                      value: '11155111',
+                      placeholder: 'Enter 1, 137, 80002, or 11155111'
+                    },
+                    { 
+                      id: 'minBalance', 
+                      type: ['value'], 
+                      label: 'Min Balance (Wei)', 
+                      inputType: 'number',
+                      value: '1',
+                      // @ts-expect-error - We know comparator exists in BlockInput
+                      comparator: '>='
+                    }
+                  ],
+                  properties: {
+                    conditionType: 'rpc',
+                    method: 'eth_getBalance',
+                    parameters: [':userAddress', 'latest']
+                  },
+                  isTemplate: false
+                };
+                
+                setBlocks(prev => [...prev, newBlock]);
+              }}
+              className="px-3 py-1.5 bg-white/5 text-white/80 rounded-lg text-sm
+                border border-white/10 transition-all duration-200
+                hover:bg-white/10 hover:border-white/20 hover:text-white
+                focus:outline-none focus:ring-1 focus:ring-white/20
+                flex items-center gap-2 whitespace-nowrap"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>ETH Balance (1 Wei)</span>
+            </button>
+
+            <button
+              onClick={() => {
+                // Clear workspace first
+                handleClear();
+                
+                const fiveMinutesFromNow = new Date();
+                fiveMinutesFromNow.setMinutes(fiveMinutesFromNow.getMinutes() + 5);
+                const timestamp = Math.floor(fiveMinutesFromNow.getTime() / 1000);
+                
+                // Create the compound AND condition with both timelock and ETH balance
+                const newBlock: Block = {
+                  id: `compound-${Date.now()}`,
+                  type: 'operator',
+                  category: BLOCK_CATEGORIES.OPERATORS,
+                  label: 'AND',
+                  inputs: [
+                    {
+                      id: `condition-1-${Date.now()}`,
+                      type: ['condition', 'operator'],
+                      label: 'Condition 1',
+                      connected: {
+                        id: `time-${Date.now()}`,
+                        type: 'condition',
+                        category: BLOCK_CATEGORIES.CONDITIONS,
+                        label: 'Time Lock',
+                        inputs: [
+                          { 
+                            id: 'chain', 
+                            type: ['value'], 
+                            label: 'Chain ID', 
+                            inputType: 'number',
+                            value: '11155111',
+                            placeholder: 'Enter 1, 137, 80002, or 11155111'
+                          },
+                          { 
+                            id: 'minTimestamp', 
+                            type: ['value'], 
+                            label: 'Minimum Timestamp', 
+                            inputType: 'number',
+                            value: timestamp.toString(),
+                            placeholder: 'Unix timestamp in seconds',
+                            // @ts-expect-error - We know comparator exists in BlockInput
+                            comparator: '>='
+                          }
+                        ],
+                        properties: {
+                          conditionType: 'time'
                         },
-                        { 
-                          id: 'minTimestamp', 
-                          type: ['value'], 
-                          label: 'Minimum Timestamp', 
-                          inputType: 'number',
-                          value: timestamp.toString(),
-                          placeholder: 'Unix timestamp in seconds'
-                        }
-                      ],
-                      properties: {
-                        conditionType: 'time'
-                      },
-                      isTemplate: false
+                        isTemplate: false
+                      }
+                    },
+                    {
+                      id: `condition-2-${Date.now()}`,
+                      type: ['condition', 'operator'],
+                      label: 'Condition 2',
+                      connected: {
+                        id: `eth-balance-${Date.now()}`,
+                        type: 'condition',
+                        category: BLOCK_CATEGORIES.CONDITIONS,
+                        label: 'ETH Balance',
+                        inputs: [
+                          { 
+                            id: 'chain', 
+                            type: ['value'], 
+                            label: 'Chain ID', 
+                            inputType: 'number',
+                            value: '11155111',
+                            placeholder: 'Enter 1, 137, 80002, or 11155111'
+                          },
+                          { 
+                            id: 'minBalance', 
+                            type: ['value'], 
+                            label: 'Min Balance (Wei)', 
+                            inputType: 'number',
+                            value: '1',
+                            // @ts-expect-error - We know comparator exists in BlockInput
+                            comparator: '>='
+                          }
+                        ],
+                        properties: {
+                          conditionType: 'rpc',
+                          method: 'eth_getBalance',
+                          parameters: [':userAddress', 'latest']
+                        },
+                        isTemplate: false
+                      }
+                    },
+                    {
+                      id: `condition-3-${Date.now()}`,
+                      type: ['condition', 'operator'],
+                      label: 'Add Condition'
+                    }
+                  ],
+                  properties: {
+                    operator: 'and',
+                    maxInputs: 10
+                  },
+                  isTemplate: false
+                };
+                
+                setBlocks(prev => [...prev, newBlock]);
+              }}
+              className="px-3 py-1.5 bg-white/5 text-white/80 rounded-lg text-sm
+                border border-white/10 transition-all duration-200
+                hover:bg-white/10 hover:border-white/20 hover:text-white
+                focus:outline-none focus:ring-1 focus:ring-white/20
+                flex items-center gap-2 whitespace-nowrap"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                  d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+              </svg>
+              <span>AND (Time + Balance)</span>
+            </button>
+
+            <button
+              onClick={() => {
+                // Clear workspace first
+                handleClear();
+                
+                const newBlock: Block = {
+                  id: `erc20-balance-${Date.now()}`,
+                  type: 'condition',
+                  category: BLOCK_CATEGORIES.CONDITIONS,
+                  label: 'ERC20 Balance',
+                  inputs: [
+                    { 
+                      id: 'chain', 
+                      type: ['value'], 
+                      label: 'Chain ID', 
+                      inputType: 'number',
+                      value: '11155111',
+                      placeholder: 'Enter 1, 137, 80002, or 11155111'
+                    },
+                    { 
+                      id: 'contractAddress', 
+                      type: ['value'], 
+                      label: 'Token Contract', 
+                      inputType: 'text',
+                      value: '0x779877A7B0D9E8603169DdbD7836e478b4624789', // Sepolia ChainLink token
+                      placeholder: 'Token contract address'
+                    },
+                    { 
+                      id: 'tokenAmount', 
+                      type: ['value'], 
+                      label: 'Token Amount', 
+                      inputType: 'number',
+                      value: '1',
+                      // @ts-expect-error - We know comparator exists in BlockInput
+                      comparator: '>='
+                    }
+                  ],
+                  properties: {
+                    conditionType: 'contract',
+                    standardContractType: 'ERC20',
+                    method: 'balanceOf',
+                    parameters: [':userAddress'],
+                    returnValueTest: {
+                      comparator: '>=',
+                      value: '1'
                     }
                   },
-                  {
-                    id: `condition-2-${Date.now()}`,
-                    type: ['condition', 'operator'],
-                    label: 'Condition 2',
-                    connected: {
-                      id: `eth-balance-${Date.now()}`,
-                      type: 'condition',
-                      category: BLOCK_CATEGORIES.CONDITIONS,
-                      label: 'ETH Balance',
-                      inputs: [
-                        { 
-                          id: 'chain', 
-                          type: ['value'], 
-                          label: 'Chain ID', 
-                          inputType: 'number',
-                          value: '11155111',
-                          placeholder: 'Enter 1, 137, 80002, or 11155111'
-                        },
-                        { 
-                          id: 'minBalance', 
-                          type: ['value'], 
-                          label: 'Min Balance (Wei)', 
-                          inputType: 'number',
-                          value: '1'
-                        }
-                      ],
-                      properties: {
-                        conditionType: 'rpc',
-                        method: 'eth_getBalance',
-                        parameters: [':userAddress', 'latest']
-                      },
-                      isTemplate: false
+                  isTemplate: false
+                };
+                
+                setBlocks(prev => [...prev, newBlock]);
+              }}
+              className="px-3 py-1.5 bg-white/5 text-white/80 rounded-lg text-sm
+                border border-white/10 transition-all duration-200
+                hover:bg-white/10 hover:border-white/20 hover:text-white
+                focus:outline-none focus:ring-1 focus:ring-white/20
+                flex items-center gap-2 whitespace-nowrap"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                  d="M9 8h6m-5 0a3 3 0 110 6H9l3 3m-3-6h6m6 1a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>ERC20 Balance</span>
+            </button>
+            
+            <button
+              onClick={() => {
+                // Clear workspace first
+                handleClear();
+                
+                const newBlock: Block = {
+                  id: `erc721-ownership-${Date.now()}`,
+                  type: 'condition',
+                  category: BLOCK_CATEGORIES.CONDITIONS,
+                  label: 'NFT Ownership',
+                  inputs: [
+                    { 
+                      id: 'chain', 
+                      type: ['value'], 
+                      label: 'Chain ID', 
+                      inputType: 'number',
+                      value: '11155111',
+                      placeholder: 'Enter 1, 137, 80002, or 11155111'
+                    },
+                    { 
+                      id: 'contractAddress', 
+                      type: ['value'], 
+                      label: 'NFT Contract', 
+                      inputType: 'text',
+                      value: '0x7C9e161ebe55F02A2810701e3F1C479c9dC0a3E8', // Example NFT on Sepolia
+                      placeholder: 'NFT contract address'
+                    },
+                    { 
+                      id: 'tokenId', 
+                      type: ['value'], 
+                      label: 'Token ID', 
+                      inputType: 'number',
+                      value: '1',
+                      // @ts-expect-error - We know comparator exists in BlockInput
+                      comparator: '=='
+                    }
+                  ],
+                  properties: {
+                    conditionType: 'contract',
+                    standardContractType: 'ERC721',
+                    method: 'ownerOf',
+                    parameters: [':tokenId'],
+                    returnValueTest: {
+                      comparator: '==',
+                      value: ':userAddress'
                     }
                   },
-                  {
-                    id: `condition-3-${Date.now()}`,
-                    type: ['condition', 'operator'],
-                    label: 'Add Condition'
-                  }
-                ],
-                properties: {
-                  operator: 'and',
-                  maxInputs: 10
-                },
-                isTemplate: false
-              };
-              
-              setBlocks(prev => [...prev, newBlock]);
-            }}
-            className="px-3 py-1.5 bg-white/5 text-white/80 rounded-lg text-sm
-              border border-white/10 transition-all duration-200
-              hover:bg-white/10 hover:border-white/20 hover:text-white
-              focus:outline-none focus:ring-1 focus:ring-white/20
-              flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
-                d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
-            </svg>
-            <span>AND (Time + Balance)</span>
-          </button>
+                  isTemplate: false
+                };
+                
+                setBlocks(prev => [...prev, newBlock]);
+              }}
+              className="px-3 py-1.5 bg-white/5 text-white/80 rounded-lg text-sm
+                border border-white/10 transition-all duration-200
+                hover:bg-white/10 hover:border-white/20 hover:text-white
+                focus:outline-none focus:ring-1 focus:ring-white/20
+                flex items-center gap-2 whitespace-nowrap"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>NFT Ownership</span>
+            </button>
+          </div>
         </div>
       </div>
 

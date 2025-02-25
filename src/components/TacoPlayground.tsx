@@ -54,7 +54,7 @@ const TacoPlayground: React.FC = () => {
     <DndProvider backend={HTML5Backend}>
       <TacoProvider>
         <MainLayout onOpenSettings={() => setIsSettingsOpen(true)}>
-          <div className="flex flex-col gap-3 max-w-[1600px] mx-auto">
+          <div className="flex flex-col gap-4 w-full min-h-0">
             <WorkspaceLayout
               workspace={
                 <BlockWorkspace 

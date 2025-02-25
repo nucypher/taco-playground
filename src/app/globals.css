@@ -41,17 +41,29 @@
 
 html, body {
   min-height: 100vh;
+  height: 100%;
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
+  background-color: #000; /* Ensure black background */
   font-family: 'ABCDiatype', sans-serif;
   font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  display: flex;
+  flex-direction: column;
+}
+
+#__next, main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .text-taco {
@@ -96,5 +108,10 @@ body {
 
 /* Ensure proper scrolling with zoom */
 .min-h-screen {
-  min-height: 125vh;
+  min-height: 100vh;
+}
+
+/* Fix for blue area at bottom */
+html {
+  background-color: #000;
 }

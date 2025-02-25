@@ -16,15 +16,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, onOpenSettings }) => 
       <Header variant="playground" onOpenSettings={onOpenSettings} />
 
       {/* Content Area with Sidebar */}
-      <div className="flex flex-1">
+      <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <div className="w-96 border-r border-white/10 bg-black">
+        <div className="w-96 border-r border-white/10 bg-black h-full">
           <BlockSidebar />
         </div>
 
         {/* Main Content */}
-        <div className="flex-1">
-          <main className="p-4 bg-black">
+        <div className="flex-1 overflow-auto">
+          <main className="px-3 pt-2 pb-3 bg-black w-full min-h-0">
             {children}
           </main>
         </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import TacoErrorDisplay from './TacoErrorDisplay';
 
 interface ErrorPanelProps {
   error: string | null;
@@ -14,10 +15,13 @@ interface ParsedErrorItem {
 const ErrorPanel: React.FC<ErrorPanelProps> = ({ error, onClear }) => {
   if (!error) return null;
 
-  // Try to parse the error if it's a JSON string
+  // Check if this is a TACo decryption error
+  const isTacoDecryptionError = error.includes('Threshold of responses not met; TACo decryption failed with errors:');
+
+  // Try to parse the error if it's a JSON string (for non-TACo errors)
   let parsedError = error;
   try {
-    if (error.includes('[{')) {
+    if (!isTacoDecryptionError && error.includes('[{')) {
       const errorObj = JSON.parse(error.substring(error.indexOf('['))) as ParsedErrorItem[];
       parsedError = errorObj.map(err => (
         `${err.message} (${err.code}) at ${err.path.join('.')}`
@@ -29,7 +33,7 @@ const ErrorPanel: React.FC<ErrorPanelProps> = ({ error, onClear }) => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-red-500/10 p-4">
+    <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-red-500/10 p-4 z-50">
       <div className="max-w-[1600px] mx-auto">
         <div className="bg-red-500/5 border border-red-500/10 rounded-lg p-4">
           <div className="flex items-start justify-between">
@@ -60,9 +64,16 @@ const ErrorPanel: React.FC<ErrorPanelProps> = ({ error, onClear }) => {
               </button>
             )}
           </div>
-          <pre className="mt-2 text-sm font-mono text-red-400 whitespace-pre-wrap break-all">
-            {parsedError}
-          </pre>
+          
+          {isTacoDecryptionError ? (
+            <div className="mt-2">
+              <TacoErrorDisplay errorMessage={error} />
+            </div>
+          ) : (
+            <pre className="mt-2 text-sm font-mono text-red-400 whitespace-pre-wrap break-all">
+              {parsedError}
+            </pre>
+          )}
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { Block } from './BlockTypes';
 import { TacoCondition } from '../../types/taco';
 import DraggableBlock from './DraggableBlock';
 import { blocksToJson } from './blockUtils';
+import { BLOCK_CATEGORIES } from './BlockTypes';
 
 interface BlockWorkspaceProps {
   onConditionChange: (condition: TacoCondition | null) => void;
@@ -149,8 +150,8 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
             type: item.type,
             category: item.category,
             label: item.label,
-            inputs: item.inputs,
             properties: item.properties,
+            inputs: item.inputs,
             isTemplate: false,
           }));
           
@@ -197,6 +198,232 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
             <span>Clear Workspace</span>
           </button>
         )}
+      </div>
+
+      <div className="flex items-center gap-3 px-4 py-3 bg-white/[0.02] border border-white/10 rounded-lg">
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-sm font-medium text-white/60">Quick Conditions:</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              // Clear workspace first
+              handleClear();
+              
+              const fiveMinutesFromNow = new Date();
+              fiveMinutesFromNow.setMinutes(fiveMinutesFromNow.getMinutes() + 5);
+              
+              const timestamp = Math.floor(fiveMinutesFromNow.getTime() / 1000);
+              
+              const newBlock: Block = {
+                id: `time-${Date.now()}`,
+                type: 'condition',
+                category: BLOCK_CATEGORIES.CONDITIONS,
+                label: 'Time Lock',
+                inputs: [
+                  { 
+                    id: 'chain', 
+                    type: ['value'], 
+                    label: 'Chain ID', 
+                    inputType: 'number',
+                    value: '11155111',
+                    placeholder: 'Enter 1, 137, 80002, or 11155111'
+                  },
+                  { 
+                    id: 'minTimestamp', 
+                    type: ['value'], 
+                    label: 'Minimum Timestamp', 
+                    inputType: 'number',
+                    value: timestamp.toString(),
+                    placeholder: 'Unix timestamp in seconds'
+                  }
+                ],
+                properties: {
+                  conditionType: 'time'
+                },
+                isTemplate: false
+              };
+              
+              setBlocks(prev => [...prev, newBlock]);
+            }}
+            className="px-3 py-1.5 bg-white/5 text-white/80 rounded-lg text-sm
+              border border-white/10 transition-all duration-200
+              hover:bg-white/10 hover:border-white/20 hover:text-white
+              focus:outline-none focus:ring-1 focus:ring-white/20
+              flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Timelock (5min)</span>
+          </button>
+
+          <button
+            onClick={() => {
+              // Clear workspace first
+              handleClear();
+              
+              const newBlock: Block = {
+                id: `eth-balance-${Date.now()}`,
+                type: 'condition',
+                category: BLOCK_CATEGORIES.CONDITIONS,
+                label: 'ETH Balance',
+                inputs: [
+                  { 
+                    id: 'chain', 
+                    type: ['value'], 
+                    label: 'Chain ID', 
+                    inputType: 'number',
+                    value: '11155111',
+                    placeholder: 'Enter 1, 137, 80002, or 11155111'
+                  },
+                  { 
+                    id: 'minBalance', 
+                    type: ['value'], 
+                    label: 'Min Balance (Wei)', 
+                    inputType: 'number',
+                    value: '1'
+                  }
+                ],
+                properties: {
+                  conditionType: 'rpc',
+                  method: 'eth_getBalance',
+                  parameters: [':userAddress', 'latest']
+                },
+                isTemplate: false
+              };
+              
+              setBlocks(prev => [...prev, newBlock]);
+            }}
+            className="px-3 py-1.5 bg-white/5 text-white/80 rounded-lg text-sm
+              border border-white/10 transition-all duration-200
+              hover:bg-white/10 hover:border-white/20 hover:text-white
+              focus:outline-none focus:ring-1 focus:ring-white/20
+              flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>ETH Balance (1 Wei)</span>
+          </button>
+
+          <button
+            onClick={() => {
+              // Clear workspace first
+              handleClear();
+              
+              const fiveMinutesFromNow = new Date();
+              fiveMinutesFromNow.setMinutes(fiveMinutesFromNow.getMinutes() + 5);
+              const timestamp = Math.floor(fiveMinutesFromNow.getTime() / 1000);
+              
+              // Create the compound AND condition with both timelock and ETH balance
+              const newBlock: Block = {
+                id: `compound-${Date.now()}`,
+                type: 'operator',
+                category: BLOCK_CATEGORIES.OPERATORS,
+                label: 'AND',
+                inputs: [
+                  {
+                    id: `condition-1-${Date.now()}`,
+                    type: ['condition', 'operator'],
+                    label: 'Condition 1',
+                    connected: {
+                      id: `time-${Date.now()}`,
+                      type: 'condition',
+                      category: BLOCK_CATEGORIES.CONDITIONS,
+                      label: 'Time Lock',
+                      inputs: [
+                        { 
+                          id: 'chain', 
+                          type: ['value'], 
+                          label: 'Chain ID', 
+                          inputType: 'number',
+                          value: '11155111',
+                          placeholder: 'Enter 1, 137, 80002, or 11155111'
+                        },
+                        { 
+                          id: 'minTimestamp', 
+                          type: ['value'], 
+                          label: 'Minimum Timestamp', 
+                          inputType: 'number',
+                          value: timestamp.toString(),
+                          placeholder: 'Unix timestamp in seconds'
+                        }
+                      ],
+                      properties: {
+                        conditionType: 'time'
+                      },
+                      isTemplate: false
+                    }
+                  },
+                  {
+                    id: `condition-2-${Date.now()}`,
+                    type: ['condition', 'operator'],
+                    label: 'Condition 2',
+                    connected: {
+                      id: `eth-balance-${Date.now()}`,
+                      type: 'condition',
+                      category: BLOCK_CATEGORIES.CONDITIONS,
+                      label: 'ETH Balance',
+                      inputs: [
+                        { 
+                          id: 'chain', 
+                          type: ['value'], 
+                          label: 'Chain ID', 
+                          inputType: 'number',
+                          value: '11155111',
+                          placeholder: 'Enter 1, 137, 80002, or 11155111'
+                        },
+                        { 
+                          id: 'minBalance', 
+                          type: ['value'], 
+                          label: 'Min Balance (Wei)', 
+                          inputType: 'number',
+                          value: '1'
+                        }
+                      ],
+                      properties: {
+                        conditionType: 'rpc',
+                        method: 'eth_getBalance',
+                        parameters: [':userAddress', 'latest']
+                      },
+                      isTemplate: false
+                    }
+                  },
+                  {
+                    id: `condition-3-${Date.now()}`,
+                    type: ['condition', 'operator'],
+                    label: 'Add Condition'
+                  }
+                ],
+                properties: {
+                  operator: 'and',
+                  maxInputs: 10
+                },
+                isTemplate: false
+              };
+              
+              setBlocks(prev => [...prev, newBlock]);
+            }}
+            className="px-3 py-1.5 bg-white/5 text-white/80 rounded-lg text-sm
+              border border-white/10 transition-all duration-200
+              hover:bg-white/10 hover:border-white/20 hover:text-white
+              focus:outline-none focus:ring-1 focus:ring-white/20
+              flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+            </svg>
+            <span>AND (Time + Balance)</span>
+          </button>
+        </div>
       </div>
 
       <div

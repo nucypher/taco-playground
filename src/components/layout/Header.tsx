@@ -15,7 +15,7 @@ const Header: React.FC<HeaderProps> = ({ variant = 'playground', onOpenSettings 
   };
 
   return (
-    <header className="bg-black border-b border-white/10">
+    <header className="bg-white/5 border-b border-white/10">
       <div className="flex justify-between items-center px-6 py-3">
         <div className="flex items-center gap-4">
           <Image
@@ -26,27 +26,18 @@ const Header: React.FC<HeaderProps> = ({ variant = 'playground', onOpenSettings 
             className="rounded"
           />
           <div>
-            <h1 className="text-xl font-bold text-white tracking-tight">
-              {variant === 'playground' ? 'TACo Playground' : 'TACo Decryption'}
+            <h1 className="text-2xl font-bold text-white tracking-[-0.02em] leading-none">
+              <span className="font-extrabold">TACo</span>
+              {variant === 'playground' ? (
+                <span className="text-white/80 font-semibold"> Playground</span>
+              ) : (
+                <span className="text-white/80 font-semibold"> Decryption</span>
+              )}
             </h1>
           </div>
         </div>
         <div className="flex items-center gap-4">
-          {variant === 'playground' && (
-            <button
-              onClick={onOpenSettings}
-              className="p-2 text-white/60 hover:text-white/80 transition-colors rounded-lg
-                hover:bg-white/5 focus:outline-none focus:ring-1 focus:ring-white/10"
-              aria-label="Open settings"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
-          )}
+          <WalletButton onConnect={handleConnect} />
           {variant === 'playground' ? (
             <Link 
               href="/decrypt"
@@ -68,7 +59,21 @@ const Header: React.FC<HeaderProps> = ({ variant = 'playground', onOpenSettings 
               Go to Playground
             </Link>
           )}
-          <WalletButton onConnect={handleConnect} />
+          {variant === 'playground' && (
+            <button
+              onClick={onOpenSettings}
+              className="p-2 text-white/60 hover:text-white/80 transition-colors rounded-lg
+                hover:bg-white/5 focus:outline-none focus:ring-1 focus:ring-white/10"
+              aria-label="Open settings"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
     </header>

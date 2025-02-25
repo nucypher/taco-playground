@@ -71,7 +71,7 @@ const TacoPlayground: React.FC = () => {
             />
             
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-black rounded-lg">
+              <div>
                 <EncryptionPanel
                   condition={currentCondition}
                   onMessageKitGenerated={handleMessageKitGenerated}
@@ -79,7 +79,7 @@ const TacoPlayground: React.FC = () => {
                   settings={settings}
                 />
               </div>
-              <div className="bg-black rounded-lg">
+              <div>
                 <DecryptionPanel 
                   messageKit={messageKit}
                   ciphertext={ciphertext}

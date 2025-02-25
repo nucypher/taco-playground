@@ -169,7 +169,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
   drop(elementRef);
 
   return (
-    <div className="space-y-3 bg-black border border-white/5 rounded-lg p-6 flex flex-col flex-1">
+    <div className="space-y-3 bg-transparent border border-white/10 rounded-lg p-6 flex flex-col flex-1">
       <div className="flex justify-between items-center border-b border-white/10 -mx-6 px-6 py-4 -mt-6 bg-white/5">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-white/5 rounded-lg border border-white/10">
@@ -203,7 +203,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
         ref={elementRef}
         className={`
           flex-1 min-h-[400px] p-4 rounded-lg overflow-y-auto
-          bg-black border transition-all duration-200
+          bg-black/30 transition-all duration-200
           scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-white/5
           hover:scrollbar-thumb-white/10
           [&::-webkit-scrollbar]:w-2
@@ -214,9 +214,9 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
           [&::-webkit-scrollbar-thumb]:border-transparent
           [&::-webkit-scrollbar-thumb]:bg-clip-padding
           [&::-webkit-scrollbar-thumb]:hover:bg-white/10
-          ${isOver && canDrop ? 'border-white/10 bg-white/5' : 'border-white/5'}
-          ${isOver && !canDrop ? 'border-red-500/10 bg-red-500/5' : ''}
-          ${!isOver && canDrop ? 'border-white/10 border-dashed' : ''}
+          ${isOver && canDrop ? 'bg-white/[0.06]' : ''}
+          ${isOver && !canDrop ? 'bg-red-500/[0.06]' : ''}
+          ${!isOver && canDrop ? 'bg-white/[0.04]' : ''}
         `}
       >
         <div className="space-y-4 min-w-full">

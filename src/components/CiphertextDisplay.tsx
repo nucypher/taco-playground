@@ -70,11 +70,6 @@ const CiphertextDisplay: React.FC<CiphertextDisplayProps> = ({
           </button>
         )}
       </div>
-      {isValid && (
-        <p className="mt-2 text-xs text-green-400">
-          ✓ Valid ciphertext
-        </p>
-      )}
     </div>
   );
 };

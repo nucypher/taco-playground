@@ -260,8 +260,9 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
       data-block-type={block.type}
     >
       <div className={`
-        bg-black/30 border border-white/5 rounded-lg p-3
-        transition-all duration-200 hover:border-white/10
+        bg-white/[0.03] border border-white/10 rounded-lg p-3
+        transition-all duration-200 hover:border-white/20 hover:bg-white/[0.06]
+        shadow-lg shadow-black/20
         ${block.type === 'operator' ? 'bg-opacity-30' : ''}
       `}>
         <div className="flex items-center justify-between">

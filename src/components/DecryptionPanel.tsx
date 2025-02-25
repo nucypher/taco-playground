@@ -156,7 +156,7 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({
   };
 
   return (
-    <div className="space-y-6 p-6 bg-black border border-white/5 rounded-lg">
+    <div className="space-y-6 p-6 bg-white/[0.02] border border-white/10 rounded-lg shadow-xl shadow-black/20 backdrop-blur-sm">
       <div className="flex justify-between items-center border-b border-white/10 -mx-6 px-6 py-4 -mt-6 bg-white/5">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-white/5 rounded-lg border border-white/10">
@@ -165,8 +165,16 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({
                 d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
             </svg>
           </div>
-          <h3 className="text-sm font-medium text-white tracking-wide uppercase">Decrypt Message</h3>
+          <h3 className="text-sm font-medium text-white tracking-wide uppercase">Decrypt</h3>
         </div>
+        {!!activeMessageKit && (
+          <div className="flex items-center gap-2 text-xs text-taco">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Valid ciphertext</span>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -174,7 +182,7 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({
           ciphertext={customCiphertext}
           onChange={handleCustomCiphertextChange}
           onClear={handleClear}
-          isValid={!!activeMessageKit}
+          isValid={false}
         />
 
         <button
@@ -193,14 +201,14 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
             )}
-            <span>{isDecrypting ? 'Decrypting...' : 'Decrypt Message'}</span>
+            <span>{isDecrypting ? 'Decrypting...' : 'Decrypt'}</span>
           </div>
         </button>
 
         {decryptedMessage && (
           <div className="p-4 bg-white/5 border border-white/5 rounded-lg space-y-2">
             <label className="block text-sm font-medium text-white/80">
-              Decrypted Message
+              Cleartext
             </label>
             <p className="text-white font-mono text-sm break-all bg-black/50 p-3 rounded border border-white/5">
               {decryptedMessage}

@@ -8,6 +8,8 @@ const nextConfig = {
     // Disable TypeScript during production builds
     ignoreBuildErrors: true,
   },
+  output: 'export',  // Enable static exports
+  distDir: 'out',    // Explicitly set output directory to 'out'
 };
 
 module.exports = nextConfig; 

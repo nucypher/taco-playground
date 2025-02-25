@@ -158,7 +158,7 @@ export const AVAILABLE_BLOCKS: Block[] = [
       standardContractType: 'ERC721',
       method: 'ownerOf',
       returnValueTest: {
-        comparator: '=',
+        comparator: '==',
         value: ':userAddress'
       }
     }

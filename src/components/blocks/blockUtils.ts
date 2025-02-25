@@ -169,7 +169,18 @@ const blockToJson = (block: Block): TacoCondition | null => {
       
       // Add parameters if present in properties
       if (block.properties?.parameters) {
-        contractCondition.parameters = block.properties.parameters as unknown[];
+        contractCondition.parameters = Array.isArray(block.properties.parameters) 
+          ? [...block.properties.parameters] 
+          : [block.properties.parameters];
+        
+        // Special handling for ERC721 ownership - replace :tokenId with actual token ID
+        if (block.properties.standardContractType === 'ERC721' && block.properties.method === 'ownerOf') {
+          const tokenIdInput = block.inputs?.find(input => input.id === 'tokenId');
+          if (tokenIdInput?.value) {
+            // Replace :tokenId placeholder with actual token ID
+            contractCondition.parameters = [tokenIdInput.value];
+          }
+        }
       }
       
       // Add return value test if present

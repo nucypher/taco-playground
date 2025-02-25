@@ -1,5 +1,22 @@
 import { Block } from './BlockTypes';
 import { TacoCondition, TimeCondition, ContractCondition, RpcCondition, CompoundCondition, ChainId, ReturnValueTest } from '../../types/taco';
+import { utils } from 'ethers';
+
+// Helper function to convert an address to EIP-55 checksum format using ethers.js
+export const toChecksumAddress = (address: string): string => {
+  if (!address || typeof address !== 'string') {
+    return address;
+  }
+  
+  try {
+    // Ensure the address has the 0x prefix
+    const addressWith0x = address.startsWith('0x') ? address : `0x${address}`;
+    return utils.getAddress(addressWith0x);
+  } catch (error) {
+    // If the address is invalid, return it as is
+    return address;
+  }
+};
 
 // Helper function to check if a chain ID is valid
 const isValidChainId = (chainId: number): chainId is ChainId => {
@@ -115,6 +132,15 @@ const blockToJson = (block: Block): TacoCondition | null => {
       // Add parameters if present in properties
       if (block.properties?.parameters) {
         rpcCondition.parameters = block.properties.parameters as [string, 'latest'];
+        
+        // Convert any Ethereum addresses in parameters to checksum format
+        rpcCondition.parameters = rpcCondition.parameters.map(param => {
+          // Skip special placeholders like :userAddress
+          if (typeof param === 'string' && !param.startsWith(':') && /^(0x)?[0-9a-fA-F]{40}$/.test(param)) {
+            return toChecksumAddress(param);
+          }
+          return param;
+        }) as [string, 'latest'];
       }
       
       // Add balance test if present
@@ -154,7 +180,7 @@ const blockToJson = (block: Block): TacoCondition | null => {
       // Add contract address if present
       const contractInput = block.inputs?.find(input => input.id === 'contractAddress');
       if (contractInput?.value) {
-        contractCondition.contractAddress = contractInput.value;
+        contractCondition.contractAddress = toChecksumAddress(contractInput.value);
       }
       
       // Add standard contract type if present
@@ -177,10 +203,20 @@ const blockToJson = (block: Block): TacoCondition | null => {
         if (block.properties.standardContractType === 'ERC721' && block.properties.method === 'ownerOf') {
           const tokenIdInput = block.inputs?.find(input => input.id === 'tokenId');
           if (tokenIdInput?.value) {
-            // Replace :tokenId placeholder with actual token ID
-            contractCondition.parameters = [tokenIdInput.value];
+            // Replace :tokenId placeholder with actual token ID as a number
+            const tokenId = parseInt(tokenIdInput.value);
+            contractCondition.parameters = [isNaN(tokenId) ? 0 : tokenId];
           }
         }
+        
+        // Convert any Ethereum addresses in parameters to checksum format
+        contractCondition.parameters = contractCondition.parameters.map(param => {
+          // Skip special placeholders like :userAddress
+          if (typeof param === 'string' && !param.startsWith(':') && /^(0x)?[0-9a-fA-F]{40}$/.test(param)) {
+            return toChecksumAddress(param);
+          }
+          return param;
+        });
       }
       
       // Add return value test if present

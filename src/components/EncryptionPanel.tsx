@@ -103,18 +103,18 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
           <div className="p-2 bg-white/5 rounded-lg border border-white/10">
             <svg className="w-5 h-5 text-taco" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7a4 4 0 00-8 0v4" />
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h3 className="text-sm font-medium text-white tracking-wide uppercase">Encrypt</h3>
+          <h3 className="text-sm font-diatype font-bold text-white tracking-wide uppercase">Encrypt</h3>
         </div>
       </div>
       
       <div className="space-y-4">
         <div>
           <div className="flex justify-between items-center mb-2">
-            <label className="text-sm font-medium text-white/80">
-              Plaintext
+            <label className="text-sm font-diatype font-bold text-white/80">
+              Message to encrypt:
             </label>
             {message && (
               <button
@@ -145,22 +145,14 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
 
         <button
           onClick={handleEncrypt}
-          disabled={!message || !condition || isEncrypting}
-          className="w-full px-4 py-3 bg-white/5 text-white rounded-lg font-medium
-            border border-white/5 transition-all duration-200
-            hover:bg-white/10 hover:border-white/10
-            disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/5 disabled:hover:border-white/5
-            focus:outline-none focus:ring-1 focus:ring-white/10"
+          disabled={!message || isEncrypting}
+          className="w-full px-4 py-3 bg-white/5 text-white rounded-lg font-diatype font-bold
+            border border-white/10 transition-all duration-200
+            hover:bg-white/10 hover:border-white/20
+            focus:outline-none focus:ring-1 focus:ring-white/20
+            disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <div className="flex items-center justify-center space-x-2">
-            {isEncrypting && (
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-            )}
-            <span>{isEncrypting ? 'Encrypting...' : 'Encrypt'}</span>
-          </div>
+          {isEncrypting ? 'Encrypting...' : 'Encrypt Message'}
         </button>
       </div>
     </div>

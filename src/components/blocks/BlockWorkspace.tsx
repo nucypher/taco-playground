@@ -216,26 +216,20 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
           <div className="p-2 bg-white/5 rounded-lg border border-white/10">
             <svg className="w-5 h-5 text-taco" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
-                d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10-10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zm0 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           </div>
-          <h3 className="text-sm font-medium text-white tracking-wide uppercase">Workspace</h3>
+          <h3 className="text-sm font-diatype font-bold text-white tracking-wide uppercase">Workspace</h3>
         </div>
         {blocks.length > 0 && (
           <button
             onClick={handleClear}
-            className="px-3 py-1.5 bg-white/5 text-white rounded-lg text-sm font-medium
-              border border-white/5 transition-all duration-200
-              hover:bg-white/10 hover:border-white/10
-              focus:outline-none focus:ring-1 focus:ring-white/10
-              flex items-center gap-2"
+            className="px-3 py-1.5 bg-white/5 text-white rounded-lg text-sm font-diatype font-bold
+              border border-white/10 transition-all duration-200
+              hover:bg-white/10 hover:border-white/20
+              focus:outline-none focus:ring-1 focus:ring-white/20"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
-              />
-            </svg>
-            <span>Clear Workspace</span>
+            Clear
           </button>
         )}
       </div>
@@ -247,7 +241,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="text-sm font-medium text-white/60">Quick Conditions:</span>
+            <span className="text-sm font-diatype font-bold text-white/60">Quick Conditions:</span>
           </div>
           <div className="flex items-center gap-1">
             <button 

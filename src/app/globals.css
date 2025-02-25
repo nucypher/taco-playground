@@ -1,5 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+@font-face {
+  font-family: 'OCR-X';
+  src: url('/OCR-X-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'ABCDiatype';
+  src: url('/ABCDiatype-Bold.woff') format('woff');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -31,6 +47,7 @@ html, body {
 body {
   color: var(--foreground);
   background: var(--background);
+  font-family: 'ABCDiatype', sans-serif;
   font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -39,6 +56,14 @@ body {
 
 .text-taco {
   color: var(--taco-green);
+}
+
+.font-ocr {
+  font-family: 'OCR-X', monospace;
+}
+
+.font-diatype {
+  font-family: 'ABCDiatype', sans-serif;
 }
 
 /* For WebKit browsers (Chrome, Safari) */

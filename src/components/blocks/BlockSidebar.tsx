@@ -65,7 +65,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({
             {getIcon()}
           </div>
           <div className="flex items-center justify-between w-full">
-            <h3 className="text-xs font-medium text-white tracking-wide uppercase">{title}</h3>
+            <h3 className="text-xs font-diatype font-bold text-white tracking-wide uppercase">{title}</h3>
             <span className="text-white/60 transform transition-transform duration-200">
               {isOpen ? '−' : '+'}
             </span>
@@ -116,9 +116,7 @@ const BlockSidebar: React.FC = () => {
                 d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10-10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zm0 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
             </svg>
           </div>
-          <div>
-            <h3 className="text-sm font-medium text-white tracking-wide uppercase">Blocks</h3>
-          </div>
+          <h3 className="text-sm font-diatype font-bold text-white tracking-wide uppercase">Blocks</h3>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto

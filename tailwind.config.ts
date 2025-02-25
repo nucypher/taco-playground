@@ -25,6 +25,8 @@ export default {
           "Arial",
           "sans-serif",
         ],
+        ocr: ["OCR-X", "monospace"],
+        diatype: ["ABCDiatype", "sans-serif"],
       },
       fontWeight: {
         normal: '400',

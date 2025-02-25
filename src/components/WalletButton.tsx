@@ -95,7 +95,7 @@ const WalletButton: React.FC<WalletButtonProps> = ({ onConnect }) => {
         {!isConnected ? (
           <button
             onClick={handleConnect}
-            className="px-4 py-2 rounded-lg font-medium transition-all duration-200
+            className="px-4 py-2 rounded-lg font-diatype font-bold transition-all duration-200
               bg-white/5 text-white border border-white/10
               hover:bg-white/10 hover:border-white/20
               focus:outline-none focus:ring-1 focus:ring-white/20"
@@ -109,7 +109,7 @@ const WalletButton: React.FC<WalletButtonProps> = ({ onConnect }) => {
             </span>
             <button
               onClick={handleDisconnect}
-              className="px-4 py-2 rounded-lg font-medium transition-all duration-200
+              className="px-4 py-2 rounded-lg font-diatype font-bold transition-all duration-200
                 bg-white/5 text-white border border-white/10
                 hover:bg-white/10 hover:border-white/20
                 focus:outline-none focus:ring-1 focus:ring-white/20"

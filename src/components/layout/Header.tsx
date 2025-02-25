@@ -26,12 +26,12 @@ const Header: React.FC<HeaderProps> = ({ variant = 'playground', onOpenSettings 
             className="rounded"
           />
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-[-0.02em] leading-none">
-              <span className="font-extrabold">TACo</span>
+            <h1 className="text-2xl text-white tracking-[-0.02em] leading-none flex items-baseline">
+              <span className="font-ocr text-taco text-3xl tracking-wider">TACo</span>
               {variant === 'playground' ? (
-                <span className="text-white/80 font-semibold"> Playground</span>
+                <span className="font-ocr text-white/80 ml-1 tracking-wider"> PLAYGROUND</span>
               ) : (
-                <span className="text-white/80 font-semibold"> Decryption</span>
+                <span className="font-ocr text-white/80 ml-1 tracking-wider"> DECRYPTION</span>
               )}
             </h1>
           </div>
@@ -41,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({ variant = 'playground', onOpenSettings 
           {variant === 'playground' ? (
             <Link 
               href="/decrypt"
-              className="px-4 py-2 bg-white/5 text-white rounded-lg text-sm font-medium
+              className="px-4 py-2 bg-white/5 text-white rounded-lg text-sm font-diatype font-bold
                 border border-white/5 transition-all duration-200
                 hover:bg-white/10 hover:border-white/10
                 focus:outline-none focus:ring-1 focus:ring-white/10"
@@ -51,7 +51,7 @@ const Header: React.FC<HeaderProps> = ({ variant = 'playground', onOpenSettings 
           ) : (
             <Link 
               href="/"
-              className="px-4 py-2 bg-white/5 text-white rounded-lg text-sm font-medium
+              className="px-4 py-2 bg-white/5 text-white rounded-lg text-sm font-diatype font-bold
                 border border-white/5 transition-all duration-200
                 hover:bg-white/10 hover:border-white/10
                 focus:outline-none focus:ring-1 focus:ring-white/10"

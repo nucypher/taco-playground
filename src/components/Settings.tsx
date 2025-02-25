@@ -25,7 +25,7 @@ const Settings: React.FC<SettingsProps> = ({
     if (config.ritualId !== ritualId) {
       onConfigChange({ ...config, ritualId });
     }
-  }, [config.domain]);
+  }, [config.domain, config, onConfigChange]);
 
   const handleDomainChange = (value: string) => {
     const domain = value === 'devnet' ? domains.DEVNET : domains.TESTNET;

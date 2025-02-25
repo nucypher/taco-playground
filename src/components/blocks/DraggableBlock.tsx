@@ -244,11 +244,6 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
     onBlockUpdate(updatedBlock);
   };
 
-  const renderConnectedBlock = (connectedBlock: Block, parentPath: string[]) => {
-    // Don't render any blocks here - they are all handled in the main render
-    return null;
-  };
-
   return (
     <div
       ref={combineRefs(elementRef, drag)}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { encrypt, domains, conditions, ThresholdMessageKit } from '@nucypher/taco';
+import { encrypt, conditions, ThresholdMessageKit } from '@nucypher/taco';
 import { ethers } from 'ethers';
 import { TacoCondition } from '../types/taco';
 import { SettingsConfig } from './Settings';

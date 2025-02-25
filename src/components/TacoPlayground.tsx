@@ -13,8 +13,6 @@ import ErrorPanel from './ErrorPanel';
 import TacoProvider from './TacoProvider';
 import { TacoCondition } from '../types/taco';
 import { ThresholdMessageKit, domains } from '@nucypher/taco';
-import Link from 'next/link';
-import WalletButton from './WalletButton';
 import Settings, { SettingsConfig } from './Settings';
 
 const TacoPlayground: React.FC = () => {
@@ -50,10 +48,6 @@ const TacoPlayground: React.FC = () => {
 
   const handleClearError = () => {
     setError(null);
-  };
-
-  const handleConnect = () => {
-    // Implementation of handleConnect function
   };
 
   return (

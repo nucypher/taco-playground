@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { conditions, decrypt, domains, initialize, ThresholdMessageKit } from '@nucypher/taco';
+import { conditions, decrypt, initialize, ThresholdMessageKit } from '@nucypher/taco';
 import { EIP4361AuthProvider, USER_ADDRESS_PARAM_DEFAULT } from '@nucypher/taco-auth';
 import { ethers } from 'ethers';
 import CiphertextDisplay from './CiphertextDisplay';
@@ -127,7 +127,7 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({
           const contextParams = await conditionContext.toContextParameters();
           console.log('Required context parameters:', contextParams);
         }
-      } catch (error) {
+      } catch {
         console.log('No conditions found in message kit, proceeding with direct decryption');
         conditionContext = undefined;
       }
@@ -182,7 +182,6 @@ const DecryptionPanel: React.FC<DecryptionPanelProps> = ({
           ciphertext={customCiphertext}
           onChange={handleCustomCiphertextChange}
           onClear={handleClear}
-          isValid={false}
         />
 
         <button

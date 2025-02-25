@@ -5,7 +5,6 @@ interface CiphertextDisplayProps {
   onChange?: (text: string) => void;
   onCopy?: () => void;
   onClear?: () => void;
-  isValid?: boolean;
   isReadOnly?: boolean;
   label?: string;
 }
@@ -15,7 +14,6 @@ const CiphertextDisplay: React.FC<CiphertextDisplayProps> = ({
   onChange,
   onCopy,
   onClear,
-  isValid,
   isReadOnly = false,
   label = 'Ciphertext'
 }) => {

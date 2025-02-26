@@ -25,6 +25,34 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
 
     const updatedBlock = JSON.parse(JSON.stringify(block));
     
+    // Handle value blocks for any input type
+    if (item.type === 'value') {
+      // For value blocks, find the input and set its value directly
+      if (parentInputId) {
+        // Handle drops into nested conditions
+        const parentInput = updatedBlock.inputs?.find((input: BlockInput) => input.id === parentInputId);
+        if (parentInput?.connected) {
+          const connectedBlock = parentInput.connected;
+          const targetInput = connectedBlock.inputs?.find((input: BlockInput) => input.id === inputId);
+          if (targetInput) {
+            targetInput.value = item.value;
+            // Update the parent input with the modified connected block
+            parentInput.connected = connectedBlock;
+            onBlockUpdate(updatedBlock);
+            return { handled: true }; // Return early after handling value drop
+          }
+        }
+      } else {
+        // Handle direct drops into inputs
+        const input = updatedBlock.inputs?.find((input: BlockInput) => input.id === inputId);
+        if (input) {
+          input.value = item.value;
+          onBlockUpdate(updatedBlock);
+          return { handled: true }; // Return early after handling value drop
+        }
+      }
+    }
+    
     if (parentInputId) {
       // Handle drops into nested conditions
       const parentInput = updatedBlock.inputs?.find((input: BlockInput) => input.id === parentInputId);
@@ -32,15 +60,6 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
         const connectedBlock = parentInput.connected;
         const targetInput = connectedBlock.inputs?.find((input: BlockInput) => input.id === inputId);
         if (targetInput) {
-          if (item.type === 'value') {
-            // For value blocks, just set the value directly
-            targetInput.value = item.value;
-            // Update the parent input with the modified connected block
-            parentInput.connected = connectedBlock;
-            onBlockUpdate(updatedBlock);
-            return { handled: true }; // Return early after handling value drop
-          }
-
           // Create a new block from the dropped item
           const droppedBlock = JSON.parse(JSON.stringify(item)) as Block;
           droppedBlock.isTemplate = false;
@@ -81,13 +100,6 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
     } else if (block.type === 'operator') {
       const input = updatedBlock.inputs?.find((input: BlockInput) => input.id === inputId);
       if (input) {
-        if (item.type === 'value') {
-          // For value blocks, just set the value directly
-          input.value = item.value;
-          onBlockUpdate(updatedBlock);
-          return { handled: true }; // Return early after handling value drop
-        }
-
         // This is the key fix - we need to handle drops of condition blocks into operator inputs
         // even if the input already has a connected block (replace it)
         const droppedBlock = JSON.parse(JSON.stringify(item)) as Block;
@@ -357,28 +369,44 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
                             onChange={(value: string) => handleComparatorChange(input.id, value)}
                             className="w-16"
                           />
+                          <DropTarget
+                            inputId={input.id}
+                            isWorkspaceBlock={isWorkspaceBlock}
+                            onDrop={handleDrop}
+                            acceptValueBlocks={true}
+                            className="flex-1"
+                          >
+                            <input
+                              type={input.inputType || 'text'}
+                              value={input.value || ''}
+                              onChange={(e) => handleValueChange(input.id, e)}
+                              autoComplete="off"
+                              data-form-type="other"
+                              className="w-full px-2 py-1.5 text-sm bg-black/30 border border-white/5 rounded 
+                                focus:outline-none focus:border-white/20 placeholder-white/20"
+                              placeholder={`Enter ${input.label.toLowerCase()}`}
+                            />
+                          </DropTarget>
+                        </div>
+                      ) : (
+                        <DropTarget
+                          inputId={input.id}
+                          isWorkspaceBlock={isWorkspaceBlock}
+                          onDrop={handleDrop}
+                          acceptValueBlocks={true}
+                          className="w-full"
+                        >
                           <input
                             type={input.inputType || 'text'}
                             value={input.value || ''}
                             onChange={(e) => handleValueChange(input.id, e)}
                             autoComplete="off"
                             data-form-type="other"
-                            className="flex-1 px-2 py-1.5 text-sm bg-black/30 border border-white/5 rounded 
+                            className="w-full px-2 py-1.5 text-sm bg-black/30 border border-white/5 rounded 
                               focus:outline-none focus:border-white/20 placeholder-white/20"
                             placeholder={`Enter ${input.label.toLowerCase()}`}
                           />
-                        </div>
-                      ) : (
-                        <input
-                          type={input.inputType || 'text'}
-                          value={input.value || ''}
-                          onChange={(e) => handleValueChange(input.id, e)}
-                          autoComplete="off"
-                          data-form-type="other"
-                          className="w-full px-2 py-1.5 text-sm bg-black/30 border border-white/5 rounded 
-                            focus:outline-none focus:border-white/20 placeholder-white/20"
-                          placeholder={`Enter ${input.label.toLowerCase()}`}
-                        />
+                        </DropTarget>
                       )}
                     </div>
                   </div>

@@ -9,6 +9,7 @@ interface DropTargetProps {
   onDrop: (inputId: string, item: DragItem, parentInputId?: string) => DropResult | void;
   children: React.ReactNode;
   className?: string;
+  acceptValueBlocks?: boolean;
 }
 
 interface DropResult {
@@ -22,6 +23,7 @@ export const DropTarget: React.FC<DropTargetProps> = ({
   onDrop,
   children,
   className = '',
+  acceptValueBlocks = false,
 }) => {
   const [{ isOver, canDrop }, dropRef] = useDrop<DragItem, DropResult, { isOver: boolean; canDrop: boolean }>(() => ({
     accept: 'block',
@@ -34,17 +36,23 @@ export const DropTarget: React.FC<DropTargetProps> = ({
     canDrop: (item: DragItem) => {
       if (!isWorkspaceBlock) return false;
       
-      // For value inputs (chain, contractAddress, etc), only accept value blocks
-      if (inputId.includes('chain') || 
+      // For value inputs (chain, contractAddress, etc), accept value blocks
+      if (acceptValueBlocks || 
+          inputId.includes('chain') || 
           inputId.includes('contractAddress') || 
           inputId.includes('timestamp') || 
           inputId.includes('balance') || 
-          inputId.includes('tokenId')) {
+          inputId.includes('tokenId') ||
+          inputId.includes('minBalance') ||
+          inputId.includes('minTimestamp') ||
+          inputId.includes('tokenAmount') ||
+          inputId.includes('method') ||
+          inputId.includes('parameters') ||
+          inputId.includes('abi')) {
         return item.type === 'value';
       }
       
       // For operator inputs (condition-1, condition-2, etc), accept conditions and operators
-      // This is the key fix - check if the inputId starts with 'condition-' to identify operator inputs
       if (inputId.startsWith('condition-')) {
         return item.type === 'condition' || item.type === 'operator';
       }
@@ -71,7 +79,7 @@ export const DropTarget: React.FC<DropTargetProps> = ({
       isOver: monitor.isOver({ shallow: true }),
       canDrop: monitor.canDrop(),
     }),
-  }), [inputId, parentInputId, isWorkspaceBlock, onDrop]);
+  }), [inputId, parentInputId, isWorkspaceBlock, onDrop, acceptValueBlocks]);
 
   const setRef = useCallback((element: HTMLDivElement | null) => {
     dropRef(element);

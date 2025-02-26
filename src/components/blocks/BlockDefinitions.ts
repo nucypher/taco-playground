@@ -130,11 +130,32 @@ export const AVAILABLE_BLOCKS: Block[] = [
         inputType: 'number',
         placeholder: 'Enter 1, 137, 80002, or 11155111'
       },
-      { id: 'minBalance', type: ['value'], label: 'Min Balance', inputType: 'number' },
+      { id: 'tokenAmount', type: ['value'], label: 'Min Balance', inputType: 'number' },
     ],
     properties: {
       conditionType: 'contract',
       standardContractType: 'ERC20',
+      method: 'balanceOf',
+      parameters: [':userAddress'],
+      returnValueTest: {
+        comparator: '>',
+        value: 0
+      }
+    }
+  },
+  {
+    id: 'erc721-balance',
+    type: 'condition',
+    category: BLOCK_CATEGORIES.CONDITIONS,
+    label: 'ERC721 Balance',
+    inputs: [
+      { id: 'contractAddress', type: ['value'], label: 'Contract Address' },
+      { id: 'chain', type: ['value'], label: 'Chain ID', inputType: 'number' },
+      { id: 'tokenAmount', type: ['value'], label: 'Min Balance', inputType: 'number' },
+    ],
+    properties: {
+      conditionType: 'contract',
+      standardContractType: 'ERC721',
       method: 'balanceOf',
       parameters: [':userAddress'],
       returnValueTest: {

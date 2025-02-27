@@ -6,13 +6,6 @@ import { Block, BLOCK_CATEGORIES } from './BlockTypes';
 import { TacoCondition } from '../../types/taco';
 import DraggableBlock from './DraggableBlock';
 import { blocksToJson } from './blockUtils';
-import { ComparatorSelect } from './ComparatorSelect';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-import { DropTarget } from './DropTarget';
-import { DragItem as DragItemType } from './types';
-import { v4 as uuidv4 } from 'uuid';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 interface BlockWorkspaceProps {
   onConditionChange: (condition: TacoCondition | null) => void;
@@ -317,7 +310,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       inputType: 'number',
                       value: timestamp.toString(),
                       placeholder: 'Unix timestamp in seconds',
-                      // @ts-expect-error - We know comparator exists in BlockInput
                       comparator: '>='
                     }
                   ],
@@ -367,7 +359,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       label: 'Min Balance (Wei)', 
                       inputType: 'number',
                       value: '1',
-                      // @ts-expect-error - We know comparator exists in BlockInput
                       comparator: '>='
                     }
                   ],
@@ -435,7 +426,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                             inputType: 'number',
                             value: timestamp.toString(),
                             placeholder: 'Unix timestamp in seconds',
-                            // @ts-expect-error - We know comparator exists in BlockInput
                             comparator: '>='
                           }
                         ],
@@ -469,7 +459,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                             label: 'Min Balance (Wei)', 
                             inputType: 'number',
                             value: '1',
-                            // @ts-expect-error - We know comparator exists in BlockInput
                             comparator: '>='
                           }
                         ],
@@ -542,7 +531,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       label: 'Token Amount', 
                       inputType: 'number',
                       value: '1',
-                      // @ts-expect-error - We know comparator exists in BlockInput
                       comparator: '>='
                     }
                   ],
@@ -607,7 +595,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       label: 'Token ID', 
                       inputType: 'number',
                       value: '1',
-                      // @ts-expect-error - We know comparator exists in BlockInput
                       comparator: '=='
                     }
                   ],
@@ -672,7 +659,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       label: 'Token Amount',
                       inputType: 'number',
                       value: '1',
-                      // @ts-expect-error - We know comparator exists in BlockInput
                       comparator: '>='
                     }
                   ],
@@ -702,6 +688,86 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                   d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <span>ERC721 Balance</span>
+            </button>
+
+            <button
+              onClick={() => {
+                // Clear workspace first
+                handleClear();
+
+                const newBlock: Block = {
+                  id: `json-rpc-${Date.now()}`,
+                  type: 'condition',
+                  category: BLOCK_CATEGORIES.CONDITIONS,
+                  label: 'JSON RPC',
+                  inputs: [
+                    {
+                      id: 'endpoint',
+                      type: ['value'],
+                      label: 'Endpoint URI',
+                      inputType: 'text',
+                      value: 'https://api.mainnet-beta.solana.com',
+                    },
+                    {
+                      id: 'method',
+                      type: ['value'],
+                      label: 'Method',
+                      inputType: 'text',
+                      value: 'getBalance',
+                    },
+                    {
+                      id: 'param_0',
+                      type: ['value'],
+                      label: 'Parameter 1',
+                      inputType: 'text',
+                      value: '83astBRguLMdt2h5U1Tpdq5tjFoJ6noeGwaY3mDLVcri'
+                    },
+                    {
+                      id: 'authorizationToken',
+                      type: ['value'],
+                      label: 'Authorization Token',
+                      inputType: 'text',
+                    },
+                    {
+                      id: 'query',
+                      type: ['value'],
+                      label: 'JSON Path Query',
+                      inputType: 'text',
+                      value: '$.value',
+                    },
+                    {
+                      id: 'expectedValue',
+                      type: ['value'],
+                      label: 'Expected Value',
+                      inputType: 'number',
+                      comparator: '>='
+                    }
+                  ],
+                  properties: {
+                    conditionType: 'json-rpc',
+                    canAddParameters: true,
+                    parameterCount: 1,
+                    returnValueTest: {
+                      comparator: '>=',
+                      value: 0
+                    }
+                  },
+                  isTemplate: false
+                };
+
+                setBlocks(prev => [...prev, newBlock]);
+              }}
+              className="px-3 py-1.5 bg-white/5 text-white/80 rounded-lg text-sm
+                border border-white/10 transition-all duration-200
+                hover:bg-white/10 hover:border-white/20 hover:text-white
+                focus:outline-none focus:ring-1 focus:ring-white/20
+                flex items-center gap-2 whitespace-nowrap"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>JSON RPC</span>
             </button>
           </div>
         </div>

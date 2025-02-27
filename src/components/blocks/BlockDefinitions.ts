@@ -219,5 +219,30 @@ export const AVAILABLE_BLOCKS: Block[] = [
     properties: {
       conditionType: 'contract',
     }
+  },
+
+  // Json Conditions
+  {
+    id: 'json-rpc',
+    type: 'condition',
+    category: BLOCK_CATEGORIES.CONDITIONS,
+    label: "JSON RPC",
+    inputs: [
+      { id: 'endpoint', type: ['value'], label: 'Endpoint URI', inputType: 'text' },
+      { id: 'method', type: ['value'], label: 'Method Name', inputType: 'text' },
+      { id: 'param_0', type: ['value'], label: 'Parameter 1', inputType: 'text' },
+      { id: 'authorizationToken', type: ['value'], label: 'Authorization Token', inputType: 'text' },
+      { id: 'query', type: ['value'], label: 'JSON Path Query', inputType: 'text' },
+      { id: 'expectedValue', type: ['value'], label: 'Expected Value', inputType: 'text' },
+    ],
+    properties: {
+      conditionType: "json-rpc",
+      canAddParameters: true,
+      parameterCount: 1,
+      returnValueTest: {
+        comparator: '>=',
+        value: 0
+      }
+    }
   }
 ]; 

@@ -95,17 +95,17 @@ export const AVAILABLE_BLOCKS: Block[] = [
     category: BLOCK_CATEGORIES.CONDITIONS,
     label: 'Time Lock',
     inputs: [
-      { 
-        id: 'chain', 
-        type: ['value'], 
-        label: 'Chain ID', 
+      {
+        id: 'chain',
+        type: ['value'],
+        label: 'Chain ID',
         inputType: 'number',
         placeholder: 'Enter any valid chain ID'
       },
-      { 
-        id: 'minTimestamp', 
-        type: ['value'], 
-        label: 'Minimum Timestamp', 
+      {
+        id: 'minTimestamp',
+        type: ['value'],
+        label: 'Minimum Timestamp',
         inputType: 'number',
         placeholder: 'Unix timestamp in seconds'
       },
@@ -123,18 +123,14 @@ export const AVAILABLE_BLOCKS: Block[] = [
     label: 'ERC20 Balance',
     inputs: [
       { id: 'contractAddress', type: ['value'], label: 'Token Address' },
-      { 
-        id: 'chain', 
-        type: ['value'], 
-        label: 'Chain ID', 
+      {
+        id: 'chain',
+        type: ['value'],
+        label: 'Chain ID',
         inputType: 'number',
         placeholder: 'Enter any valid chain ID'
       },
-<<<<<<< HEAD
-      { id: 'tokenAmount', type: ['value'], label: 'Min Balance', inputType: 'number' },
-=======
       { id: 'tokenAmount', type: ['value'], label: 'Token Amount', inputType: 'number' },
->>>>>>> 36b4b04 (fixes arbitrary chain ID input; ERC20 token amount)
     ],
     properties: {
       conditionType: 'contract',
@@ -249,4 +245,4 @@ export const AVAILABLE_BLOCKS: Block[] = [
       }
     }
   }
-]; 
+];

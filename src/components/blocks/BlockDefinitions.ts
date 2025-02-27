@@ -100,7 +100,7 @@ export const AVAILABLE_BLOCKS: Block[] = [
         type: ['value'], 
         label: 'Chain ID', 
         inputType: 'number',
-        placeholder: 'Enter 1, 137, 80002, or 11155111'
+        placeholder: 'Enter any valid chain ID'
       },
       { 
         id: 'minTimestamp', 
@@ -128,9 +128,13 @@ export const AVAILABLE_BLOCKS: Block[] = [
         type: ['value'], 
         label: 'Chain ID', 
         inputType: 'number',
-        placeholder: 'Enter 1, 137, 80002, or 11155111'
+        placeholder: 'Enter any valid chain ID'
       },
+<<<<<<< HEAD
       { id: 'tokenAmount', type: ['value'], label: 'Min Balance', inputType: 'number' },
+=======
+      { id: 'tokenAmount', type: ['value'], label: 'Token Amount', inputType: 'number' },
+>>>>>>> 36b4b04 (fixes arbitrary chain ID input; ERC20 token amount)
     ],
     properties: {
       conditionType: 'contract',
@@ -194,7 +198,7 @@ export const AVAILABLE_BLOCKS: Block[] = [
     label: 'ETH Balance',
     inputs: [
       { id: 'chain', type: ['value'], label: 'Chain ID', inputType: 'number' },
-      { id: 'minBalance', type: ['value'], label: 'Min Balance (Wei)', inputType: 'number' },
+      { id: 'minBalance', type: ['value'], label: 'Wei', inputType: 'number' },
     ],
     properties: {
       conditionType: 'rpc',

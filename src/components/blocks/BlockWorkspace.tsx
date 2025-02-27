@@ -47,6 +47,11 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
     // Convert to string for comparison
     const jsonString = JSON.stringify(json);
     
+    // Debug log for chainID updates
+    if (prevJsonRef.current !== jsonString) {
+      console.log('JSON changed:', json);
+    }
+    
     // Only update if the JSON has actually changed
     if (jsonString !== prevJsonRef.current) {
       prevJsonRef.current = jsonString;
@@ -301,7 +306,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       label: 'Chain ID', 
                       inputType: 'number',
                       value: '11155111',
-                      placeholder: 'Enter 1, 137, 80002, or 11155111'
+                      placeholder: 'Enter any valid chain ID'
                     },
                     { 
                       id: 'minTimestamp', 
@@ -351,12 +356,12 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       label: 'Chain ID', 
                       inputType: 'number',
                       value: '11155111',
-                      placeholder: 'Enter 1, 137, 80002, or 11155111'
+                      placeholder: 'Enter any valid chain ID'
                     },
                     { 
                       id: 'minBalance', 
                       type: ['value'], 
-                      label: 'Min Balance (Wei)', 
+                      label: 'Wei', 
                       inputType: 'number',
                       value: '1',
                       comparator: '>='
@@ -417,7 +422,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                             label: 'Chain ID', 
                             inputType: 'number',
                             value: '11155111',
-                            placeholder: 'Enter 1, 137, 80002, or 11155111'
+                            placeholder: 'Enter any valid chain ID'
                           },
                           { 
                             id: 'minTimestamp', 
@@ -451,12 +456,12 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                             label: 'Chain ID', 
                             inputType: 'number',
                             value: '11155111',
-                            placeholder: 'Enter 1, 137, 80002, or 11155111'
+                            placeholder: 'Enter any valid chain ID'
                           },
                           { 
                             id: 'minBalance', 
                             type: ['value'], 
-                            label: 'Min Balance (Wei)', 
+                            label: 'Wei', 
                             inputType: 'number',
                             value: '1',
                             comparator: '>='
@@ -515,7 +520,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       label: 'Chain ID', 
                       inputType: 'number',
                       value: '11155111',
-                      placeholder: 'Enter 1, 137, 80002, or 11155111'
+                      placeholder: 'Enter any valid chain ID'
                     },
                     { 
                       id: 'contractAddress', 
@@ -579,7 +584,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       label: 'Chain ID', 
                       inputType: 'number',
                       value: '11155111',
-                      placeholder: 'Enter 1, 137, 80002, or 11155111'
+                      placeholder: 'Enter any valid chain ID'
                     },
                     { 
                       id: 'contractAddress', 

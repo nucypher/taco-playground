@@ -20,15 +20,28 @@ export const toChecksumAddress = (address: string): string => {
 
 // Helper function to check if a chain ID is valid
 const isValidChainId = (chainId: number): chainId is ChainId => {
-  return [1, 137, 80002, 11155111].includes(chainId);
+  // Allow any valid number as a chain ID
+  return !isNaN(chainId) && Number.isInteger(chainId) && chainId > 0;
 };
 
 // Helper function to safely convert a string to ChainId
 const parseChainId = (value: string): ChainId => {
-  const parsed = parseInt(value);
-  if (isValidChainId(parsed)) {
-    return parsed;
+  // Ensure we're working with a trimmed string
+  const trimmedValue = value.trim();
+  
+  // If the value is empty, return the default
+  if (!trimmedValue) {
+    return 11155111; // Default to Sepolia
   }
+  
+  const parsed = parseInt(trimmedValue);
+  
+  // Check if the parsed value is a valid chain ID (any positive integer)
+  if (!isNaN(parsed) && Number.isInteger(parsed) && parsed > 0) {
+    // Cast to ChainId type - this is safe since we're allowing any positive integer
+    return parsed as ChainId;
+  }
+  
   // Default to Sepolia if invalid
   return 11155111;
 };
@@ -92,7 +105,9 @@ const blockToJson = (block: Block): TacoCondition | null => {
       
       // Add chain ID if present
       const chainInput = block.inputs?.find(input => input.id === 'chain');
-      if (chainInput?.value) {
+      if (chainInput?.value !== undefined) {
+        // Even if the value is empty, we want to process it through parseChainId
+        // which will handle empty values appropriately
         timeCondition.chain = parseChainId(chainInput.value);
       }
       
@@ -123,7 +138,8 @@ const blockToJson = (block: Block): TacoCondition | null => {
       
       // Add chain ID if present
       const chainInput = block.inputs?.find(input => input.id === 'chain');
-      if (chainInput?.value) {
+      if (chainInput?.value !== undefined) {
+        // Even if the value is empty, we want to process it through parseChainId
         rpcCondition.chain = parseChainId(chainInput.value);
       }
       
@@ -235,7 +251,8 @@ const blockToJson = (block: Block): TacoCondition | null => {
       
       // Add chain ID if present
       const chainInput = block.inputs?.find(input => input.id === 'chain');
-      if (chainInput?.value) {
+      if (chainInput?.value !== undefined) {
+        // Even if the value is empty, we want to process it through parseChainId
         contractCondition.chain = parseChainId(chainInput.value);
       }
       

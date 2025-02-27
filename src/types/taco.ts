@@ -1,7 +1,8 @@
 import { Provider } from '@ethersproject/providers';
 import { Signer } from 'ethers';
 
-export type ChainId = 1 | 137 | 80002 | 11155111;
+// Allow any number as a chain ID
+export type ChainId = number;
 
 export type Comparator = '==' | '>' | '<' | '>=' | '<=' | '!=';
 

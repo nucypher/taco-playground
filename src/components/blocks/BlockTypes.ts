@@ -16,15 +16,15 @@ export type BlockCategory = 'conditions' | 'operators' | 'values';
 
 export interface Block {
   id: string;
-  type: string;
-  category?: string;
+  type: 'condition' | 'operator' | 'value';
+  category: string;
   label: string;
   inputs?: BlockInput[];
-  properties?: Record<string, unknown>;
-  isTemplate?: boolean;
+  properties?: BlockProperties;
   value?: string;
-  inputType?: string;
+  isTemplate?: boolean;
   placeholder?: string;
+  inputType?: string;
 }
 
 export interface BlockInput {
@@ -32,9 +32,27 @@ export interface BlockInput {
   type: string | string[];
   label: string;
   connected?: Block;
-  value?: string;
-  inputType?: string;
+  value?: string | number;
+  inputType?: 'text' | 'number';
   placeholder?: string;
+  comparator?: string;
+}
+
+export interface BlockProperties {
+  conditionType?: 'time' | 'contract' | 'rpc' | 'json-rpc' | 'compound';
+  operator?: 'and' | 'or' | 'not';
+  operands?: unknown[];
+  maxInputs?: number;
+  standardContractType?: 'ERC20' | 'ERC721';
+  method?: string;
+  parameters?: unknown[];
+  returnValueTest?: {
+    comparator: string;
+    value: unknown;
+  };
+  type?: string;
+  canAddParameters?: boolean;
+  parameterCount?: number;
 }
 
 export const BLOCK_CATEGORIES = {

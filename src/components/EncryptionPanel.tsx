@@ -58,8 +58,11 @@ const EncryptionPanel: React.FC<EncryptionPanelProps> = ({
         case 'time':
           tacoCondition = new conditions.base.time.TimeCondition(condition);
           break;
+        case 'json-rpc':
+          tacoCondition = new conditions.base.jsonRpc.JsonRpcCondition(condition);
+          break;
         default:
-          throw new Error('Unsupported condition type');
+          throw new Error(`Unsupported condition type ${condition.conditionType}`);
       }
 
       const messageKit = await encrypt(

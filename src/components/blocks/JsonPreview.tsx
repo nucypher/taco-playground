@@ -93,6 +93,36 @@ const JsonPreview: React.FC<JsonPreviewProps> = ({ condition }) => {
         
         lines.push('});');
       }
+      else if (condition.conditionType === 'json-rpc') {
+        lines.push(`const ${varName} = new conditions.base.jsonRpc.JsonRpcCondition({`);
+
+        const endpoint = getProperty(condition, 'endpoint');
+        lines.push(`  endpoint: '${endpoint}',`);
+
+        const method = getProperty(condition, 'method');
+        lines.push(`  method: '${method}',`);
+
+        const params = getProperty(condition, 'params');
+        if (params) {
+          const paramsStr = JSON.stringify(params)
+            .replace(/"([^"]+)":/g, '$1:')
+            .replace(/"/g, '\'');
+          lines.push(`  params: ${paramsStr},`);
+        }
+
+        const query = getProperty(condition, 'query');
+        if (query) lines.push(`  query: '${query}',`);
+
+        const authorizationToken = getProperty(condition, 'authorizationToken');
+        if (authorizationToken) lines.push(`  authorizationToken: '${authorizationToken}',`);
+
+        const returnValueTest = getProperty(condition, 'returnValueTest');
+        if (returnValueTest && 'value' in returnValueTest) {
+          lines.push(`  returnValueTest: { comparator: "${returnValueTest.comparator || '>='}", value: ${returnValueTest.value} },`);
+        }
+
+        lines.push('});');
+      }
       else if (condition.conditionType === 'contract') {
         lines.push(`const ${varName} = new conditions.base.contract.ContractCondition({`);
         lines.push(`  chain: ${getProperty(condition, 'chain') || 11155111},  // ${getChainName(getProperty(condition, 'chain') || 11155111)}`);

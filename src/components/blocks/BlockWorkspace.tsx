@@ -6,13 +6,6 @@ import { Block, BLOCK_CATEGORIES } from './BlockTypes';
 import { TacoCondition } from '../../types/taco';
 import DraggableBlock from './DraggableBlock';
 import { blocksToJson } from './blockUtils';
-import { ComparatorSelect } from './ComparatorSelect';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-import { DropTarget } from './DropTarget';
-import { DragItem as DragItemType } from './types';
-import { v4 as uuidv4 } from 'uuid';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 interface BlockWorkspaceProps {
   onConditionChange: (condition: TacoCondition | null) => void;
@@ -317,7 +310,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       inputType: 'number',
                       value: timestamp.toString(),
                       placeholder: 'Unix timestamp in seconds',
-                      // @ts-expect-error - We know comparator exists in BlockInput
                       comparator: '>='
                     }
                   ],
@@ -367,7 +359,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       label: 'Min Balance (Wei)', 
                       inputType: 'number',
                       value: '1',
-                      // @ts-expect-error - We know comparator exists in BlockInput
                       comparator: '>='
                     }
                   ],
@@ -435,7 +426,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                             inputType: 'number',
                             value: timestamp.toString(),
                             placeholder: 'Unix timestamp in seconds',
-                            // @ts-expect-error - We know comparator exists in BlockInput
                             comparator: '>='
                           }
                         ],
@@ -469,7 +459,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                             label: 'Min Balance (Wei)', 
                             inputType: 'number',
                             value: '1',
-                            // @ts-expect-error - We know comparator exists in BlockInput
                             comparator: '>='
                           }
                         ],
@@ -542,7 +531,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       label: 'Token Amount', 
                       inputType: 'number',
                       value: '1',
-                      // @ts-expect-error - We know comparator exists in BlockInput
                       comparator: '>='
                     }
                   ],
@@ -607,7 +595,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       label: 'Token ID', 
                       inputType: 'number',
                       value: '1',
-                      // @ts-expect-error - We know comparator exists in BlockInput
                       comparator: '=='
                     }
                   ],
@@ -672,7 +659,6 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       label: 'Token Amount',
                       inputType: 'number',
                       value: '1',
-                      // @ts-expect-error - We know comparator exists in BlockInput
                       comparator: '>='
                     }
                   ],
@@ -753,8 +739,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       id: 'expectedValue',
                       type: ['value'],
                       label: 'Expected Value',
-                      inputType: 'text',
-                      value: '0',
+                      inputType: 'number',
                       comparator: '>='
                     }
                   ],
@@ -764,7 +749,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                     parameterCount: 1,
                     returnValueTest: {
                       comparator: '>=',
-                      value: '0'
+                      value: 0
                     }
                   },
                   isTemplate: false

@@ -32,7 +32,7 @@ export interface BlockInput {
   type: string | string[];
   label: string;
   connected?: Block;
-  value?: string | number;
+  value?: string;
   inputType?: 'text' | 'number';
   placeholder?: string;
   comparator?: string;

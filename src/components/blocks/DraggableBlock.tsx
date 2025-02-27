@@ -388,8 +388,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
               if (block.type === 'condition') {
                 // Check if this is a numeric input that should have a comparator
                 const needsComparator = 
-                  (input.id === 'minBalance' || input.id === 'minTimestamp' || input.id === 'tokenAmount') && 
-                  input.inputType === 'number';
+                  (input.id === 'minBalance' || input.id === 'minTimestamp' || input.id === 'tokenAmount' || input.id === 'expectedValue');
                 
                 return (
                   <div key={input.id} className={`
@@ -401,7 +400,6 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
                       {needsComparator ? (
                         <div className="flex items-center gap-2">
                           <ComparatorSelect
-                            // @ts-expect-error - We know comparator exists in BlockInput
                             value={input.comparator || '>='}
                             onChange={(value: string) => handleComparatorChange(input.id, value)}
                             className="w-16"
@@ -446,7 +444,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
                             />
                           </DropTarget>
                           {block.properties?.canAddParameters && input.id.startsWith('param_') &&
-                           parseInt(input.id.split('_')[1]) === (block.properties.parameterCount - 1) && (
+                           parseInt(input.id.split('_')[1]) === ((block.properties?.parameterCount ?? 1) - 1) && (
                             <button
                               onClick={handleAddParameter}
                               className="p-1 bg-green-500/70 rounded-full hover:bg-green-500/90 transition-colors duration-200"

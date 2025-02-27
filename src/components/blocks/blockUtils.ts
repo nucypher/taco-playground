@@ -94,8 +94,6 @@ const blockToJson = (block: Block): TacoCondition | null => {
       // Add timestamp if present
       const timestampInput = block.inputs?.find(input => input.id === 'minTimestamp');
       if (timestampInput?.value) {
-        // Use the comparator if available, default to '>='
-        // @ts-expect-error - We know comparator exists in BlockInput
         const comparator = (timestampInput.comparator || '>=') as '>=' | '>' | '<=' | '<' | '==';
         
         timeCondition.returnValueTest = {
@@ -146,8 +144,6 @@ const blockToJson = (block: Block): TacoCondition | null => {
       // Add balance test if present
       const balanceInput = block.inputs?.find(input => input.id === 'minBalance');
       if (balanceInput?.value) {
-        // Use the comparator if available, default to '>='
-        // @ts-expect-error - We know comparator exists in BlockInput
         const comparator = (balanceInput.comparator || '>=') as '>=' | '>' | '<=' | '<' | '==';
         
         rpcCondition.returnValueTest = {
@@ -164,8 +160,8 @@ const blockToJson = (block: Block): TacoCondition | null => {
         endpoint: '',
         method: '',
         returnValueTest: {
-          comparator: '==',
-          value: ''
+          comparator: '>=',
+          value: 0
         }
       };
 
@@ -207,13 +203,11 @@ const blockToJson = (block: Block): TacoCondition | null => {
       // Add return value test if present
       const expectedValueInput = block.inputs?.find(input => input.id === 'expectedValue');
       if (expectedValueInput?.value) {
-        // Use the comparator if available, default to '>='
-        // @ts-expect-error - We know comparator exists in BlockInput
         const comparator = (expectedValueInput.comparator || '>=') as '>=' | '>' | '<=' | '<' | '==';
 
         jsonRpcCondition.returnValueTest = {
           comparator,
-          value: expectedValueInput.value
+          value: (typeof expectedValueInput.value === "number") ? parseInt(expectedValueInput.value) : expectedValueInput.value
         };
       } else if (block.properties?.returnValueTest) {
         jsonRpcCondition.returnValueTest = block.properties.returnValueTest as ReturnValueTest;
@@ -285,8 +279,6 @@ const blockToJson = (block: Block): TacoCondition | null => {
       // Add return value test if present
       const tokenAmountInput = block.inputs?.find(input => input.id === 'tokenAmount');
       if (tokenAmountInput?.value) {
-        // Use the comparator if available, default to '>='
-        // @ts-expect-error - We know comparator exists in BlockInput
         const comparator = (tokenAmountInput.comparator || '>=') as '>=' | '>' | '<=' | '<' | '==';
         
         contractCondition.returnValueTest = {

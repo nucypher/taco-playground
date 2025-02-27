@@ -241,7 +241,7 @@ export const AVAILABLE_BLOCKS: Block[] = [
       parameterCount: 1,
       returnValueTest: {
         comparator: '>=',
-        value: '0'
+        value: 0
       }
     }
   }

@@ -222,7 +222,15 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
       // Handle top-level inputs
       const input = updatedBlock.inputs?.find((input: BlockInput) => input.id === inputId);
       if (input) {
-        input.value = value;
+        // Special handling for chainID inputs to ensure they're properly updated
+        if (inputId === 'chain') {
+          // Store the raw value as entered by the user
+          input.value = value;
+        } else {
+          input.value = value;
+        }
+
+        // Immediately update the block to trigger JSON preview update
         onBlockUpdate(updatedBlock);
       }
     }
@@ -287,8 +295,8 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
     };
 
     // Find the index of the last parameter input
-    const lastParamIndex = updatedBlock.inputs.findIndex((input: BlockInput) => 
-      input.id.startsWith('param_') && 
+    const lastParamIndex = updatedBlock.inputs.findIndex((input: BlockInput) =>
+      input.id.startsWith('param_') &&
       parseInt(input.id.split('_')[1]) === paramCount - 1
     );
 
@@ -388,7 +396,7 @@ const DraggableBlock: React.FC<DraggableBlockProps> = ({
               if (block.type === 'condition') {
                 // Check if this is a numeric input that should have a comparator
                 const needsComparator = 
-                  (input.id === 'minBalance' || input.id === 'minTimestamp' || input.id === 'tokenAmount' || input.id === 'expectedValue');
+                  (input.id === 'minBalance' || input.id === 'minTimestamp' || input.id === 'tokenAmount' || input.id === 'tokenId' || input.id === 'expectedValue');
                 
                 return (
                   <div key={input.id} className={`

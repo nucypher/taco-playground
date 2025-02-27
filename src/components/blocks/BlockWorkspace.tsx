@@ -711,21 +711,21 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       type: ['value'],
                       label: 'Endpoint URI',
                       inputType: 'text',
-                      value: 'https://api.mainnet-beta.solana.com',
+                      value: 'https://bitcoin-rpc.publicnode.com',
                     },
                     {
                       id: 'method',
                       type: ['value'],
                       label: 'Method',
                       inputType: 'text',
-                      value: 'getBalance',
+                      value: 'getblock',
                     },
                     {
                       id: 'param_0',
                       type: ['value'],
                       label: 'Parameter 1',
                       inputType: 'text',
-                      value: '83astBRguLMdt2h5U1Tpdq5tjFoJ6noeGwaY3mDLVcri'
+                      value: '00000000000000000001ed4d40e6b602d7f09b9d47d5e046d52339cc6673a486'
                     },
                     {
                       id: 'authorizationToken',
@@ -738,7 +738,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       type: ['value'],
                       label: 'JSON Path Query',
                       inputType: 'text',
-                      value: '$.value',
+                      value: '$.time',
                     },
                     {
                       id: 'expectedValue',
@@ -754,7 +754,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                     parameterCount: 1,
                     returnValueTest: {
                       comparator: '>=',
-                      value: 1
+                      value: 1734461294
                     }
                   },
                   isTemplate: false

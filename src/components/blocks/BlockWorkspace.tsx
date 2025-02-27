@@ -647,15 +647,15 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                       type: ['value'],
                       label: 'Chain ID',
                       inputType: 'number',
-                      value: '11155111',
-                      placeholder: 'Enter 1, 137, 80002, or 11155111'
+                      value: '137',
+                      placeholder: 'Enter any valid chain ID'
                     },
                     {
                       id: 'contractAddress',
                       type: ['value'],
                       label: 'NFT Contract',
                       inputType: 'text',
-                      value: '0x7C9e161ebe55F02A2810701e3F1C479c9dC0a3E8', // Example NFT on Sepolia
+                      value: '0x213Fb0f798263B51159871280061489Eae13C5B5', // Eth Denver NFT on Polygon Mainnet
                       placeholder: 'NFT contract address'
                     },
                     {
@@ -754,7 +754,7 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
                     parameterCount: 1,
                     returnValueTest: {
                       comparator: '>=',
-                      value: 0
+                      value: 1
                     }
                   },
                   isTemplate: false

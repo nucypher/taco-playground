@@ -33,6 +33,11 @@ const parseChainId = (value: string): ChainId => {
   return 11155111;
 };
 
+// Helper function for checking whether a string is actually numeric
+export function isNumericString(value: string): boolean {
+  return !isNaN(Number(value));
+}
+
 export const blocksToJson = (blocks: Block[]): TacoCondition | null => {
   if (!blocks.length) return null;
 
@@ -207,7 +212,7 @@ const blockToJson = (block: Block): TacoCondition | null => {
 
         jsonRpcCondition.returnValueTest = {
           comparator,
-          value: (typeof expectedValueInput.value === "number") ? parseInt(expectedValueInput.value) : expectedValueInput.value
+          value: isNumericString(expectedValueInput.value) ? parseInt(expectedValueInput.value) : expectedValueInput.value
         };
       } else if (block.properties?.returnValueTest) {
         jsonRpcCondition.returnValueTest = block.properties.returnValueTest as ReturnValueTest;

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { TacoCondition } from '../../types/taco';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { isNumericString } from './blockUtils';
 
 interface JsonPreviewProps {
   condition: TacoCondition | null;
@@ -103,7 +104,7 @@ const JsonPreview: React.FC<JsonPreviewProps> = ({ condition }) => {
         lines.push(`  method: '${method}',`);
 
         const params = getProperty(condition, 'params');
-        if (params) {
+        if (params && params.length > 0) {
           const paramsStr = JSON.stringify(params)
             .replace(/"([^"]+)":/g, '$1:')
             .replace(/"/g, '\'');
@@ -118,7 +119,8 @@ const JsonPreview: React.FC<JsonPreviewProps> = ({ condition }) => {
 
         const returnValueTest = getProperty(condition, 'returnValueTest');
         if (returnValueTest && 'value' in returnValueTest) {
-          lines.push(`  returnValueTest: { comparator: "${returnValueTest.comparator || '>='}", value: ${returnValueTest.value} },`);
+          const formattedValue = isNumericString(returnValueTest.value) ? returnValueTest.value : `'${returnValueTest.value}'`;
+          lines.push(`  returnValueTest: { comparator: "${returnValueTest.comparator || '>='}", value: ${formattedValue} },`);
         }
 
         lines.push('});');

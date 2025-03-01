@@ -74,6 +74,10 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
     onConditionChange(null);
   };
 
+  const clearCache = () => {
+    localStorage.clear();
+  }
+
   // Helper function to check if a block is connected to an operator
   const isBlockConnectedToOperator = (blockId: string): boolean => {
     return blocks.some(block => 
@@ -219,17 +223,28 @@ const BlockWorkspace: React.FC<BlockWorkspaceProps> = ({ onConditionChange }) =>
           </div>
           <h3 className="text-sm font-diatype font-bold text-white tracking-wide uppercase">Workspace</h3>
         </div>
-        {blocks.length > 0 && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={handleClear}
+            onClick={clearCache}
             className="px-3 py-1.5 bg-white/5 text-white rounded-lg text-sm font-diatype font-bold
               border border-white/10 transition-all duration-200
               hover:bg-white/10 hover:border-white/20
               focus:outline-none focus:ring-1 focus:ring-white/20"
           >
-            Clear
+            Clear Cache
           </button>
-        )}
+          {blocks.length > 0 && (
+            <button
+              onClick={handleClear}
+              className="px-3 py-1.5 bg-white/5 text-white rounded-lg text-sm font-diatype font-bold
+                border border-white/10 transition-all duration-200
+                hover:bg-white/10 hover:border-white/20
+                focus:outline-none focus:ring-1 focus:ring-white/20"
+            >
+              Clear Condition
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="px-4 py-3 bg-white/[0.02] border border-white/10 rounded-lg">
